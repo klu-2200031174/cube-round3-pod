@@ -5,6 +5,6 @@
   "mode": "inproc",
   "url": "http://localhost:8102",
   "module": "agents.prep.app",
-  "implementation": "Prep Manager Agent with Next.js migrated inspection and records API endpoints",
-  "notes": "In-process by default. Serves FastAPI/Uvicorn on port 8102 with /api/records, /api/records/{id}, and /api/inspect."
+  "implementation": "Python port of the organiser-provided reference Prep Manager (Manvith111/cube26-prp-0319-manvith111), with the reference's bugs fixed (see PROVENANCE.md). One batched Gemini vision call per unit reports observations only (met / not_met / cant_tell, which photo, where, the FNSKU label text); a deterministic rule pack (fba@1) turns them into one verdict per work-order requirement. No photos or a model failure gives UNCERTAIN / pending_review, never a guess. Does not measure weight or dimensions.",
+  "notes": "In-process by default. Also serves GET /health and POST /run: uvicorn agents.prep.app:app --port 8102. Needs GEMINI_API_KEY in .env to inspect photos; without it every photographed unit fails open to a pending record."
 }
