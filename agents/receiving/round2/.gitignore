@@ -1,0 +1,10 @@
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+out/
+.env
+.env.*
+!.env.example
+# local agent outputs
+runs/
