@@ -1,44 +1,44 @@
 # agents/receiving/  ·  Receiving Manager
 
-**Owner:** Member 1 (Receiving Manager)  (set `owner` in `agent.json` and the handle in `.github/CODEOWNERS`)
-
-> **This folder currently contains an organiser stub** that replays the synthetic Round 2 CSV. It is *not* an agent. Replace it, then replace this README with one that describes what you actually built, how to run it, and its limits.
+**Owner:** [@Bhargav200](https://github.com/Bhargav200). **Real agent, not a stub:** the Round 2 Receiving Manager, copied unchanged into `round2/` and connected through a thin adapter. Origin: [PROVENANCE.md](PROVENANCE.md).
 
 | | |
 |---|---|
-| **Reads (inputs)** | Photos at the point of receipt (pallet, carton, unit) and the PO line |
+| **Reads (inputs)** | Photos at the point of receipt, `data/input/<unit>/receiving/` (`pallet`, `carton`, `unit`, `label` in the file name set the role), and the PO line for the unit (`data/sample/receiving_sample.csv`, scoped by `org_id`) |
 | **Reads (previous evidence)** | nothing: first in the chain |
-| **Produces** | identity, quantity, carton count, damage and quality verdicts |
-| **Recommended `check_key`s** | `identity_match, carton_count, quantity, carton_damage, unit_damage, quality_flags` |
-| **`decision.outcome` values** | `accept, accept_with_exceptions, reject, pending_review` |
+| **Produces** | 9 checks: `identity_match`, `variant_colour`, `carton_count`, `units_per_carton`, `quantity`, `carton_damage`, `unit_damage`, `components`, `quality_flags` |
+| **`decision.outcome`** | `accept` (all PASS), `accept_with_exceptions` (a FAIL), `reject` (identity FAIL), `pending_review` (UNCERTAIN, no photos, or model failure) |
+| **Model** | Gemini 3.5 Flash-Lite, **one call per unit**, **blind to the PO** (prompt `rcv-prompt/0.2-blind`) |
 
-Your evidence is where supplier disputes begin and the only point at which a supplier claim is still possible. **Keep supplier-side shortfall (finding F-10) distinct from channel-side loss.** Set `subject.unit_scope` honestly: Round 2 Receiving rows are PO lines (finding F-08).
+## How it decides
 
-## Where your code goes
+1. All photos of the unit are stitched into one labelled contact sheet and sent in **one** model call. The model only *describes* what it sees; it is never shown the PO (Round 2 finding: shown the PO, it echoed it back).
+2. Deterministic code compares that description with the PO line. Every verdict has a one-line reason, the photo it is based on and a confidence from a fixed rule (two sources agree / one source / a weak source).
+3. **UNCERTAIN is a real answer.** A poor photo, conflicting counts, only packaging visible, or "no damage" on something not in the photo all give UNCERTAIN, never PASS.
+4. **Fail open.** No photos: all 9 checks UNCERTAIN and `needs_human`. Model error or timeout: a `pending` record with the error, never a guess. Wrong `org_id`: refused (404).
 
-```text
-agents/receiving/
-├── app.py          ← expose  handle(agent_input: dict) -> dict  (an Agent Output). Keep `app = make_app(...)` to serve over HTTP.
-├── agent.json      ← stage · agent_id · owner · mode (inproc | http) · url · an honest `implementation` description
-├── PROVENANCE.md   ← your Round 2 repo URL + commit this came from (create it)
-├── README.md       ← this file, rewritten
-└── …               ← your Round 2 code, prompts, rules, fixtures
-```
-
-## Integrating, in order
-
-1. Read [`INTEGRATION-GUIDE.md`](../../INTEGRATION-GUIDE.md) and [`EVIDENCE-CONTRACT.md`](../../EVIDENCE-CONTRACT.md); open [`examples/end-to-end/`](../../examples/) for a real Agent Output.
-2. In `handle()`: read `request["subject"]`, `request["inputs"]` (your captures) and `request["previous_evidence"]`; run your agent (**one batched model call per unit**); build the record with `shared.utils.records.build_record()` and wrap it with `build_output()`.
-3. **Fail open.** On a model error return `pending_output(...)`, not an exception. Never invent evidence: if you did not see it, say UNCERTAIN with an `uncertain_reason`.
-4. **Refuse other tenants.** Raise `LookupError` (HTTP 404) for a subject that is not under `subject.org_id`.
-5. Make it idempotent: the same `request_id` must yield the same `record_id`. Use the **latest override** of previous evidence (`context.overrides`).
-6. Run `pytest tests/integration/test_agent_contracts.py`, first on the stub (it passes), then on yours, **with your own fixtures**.
-7. Run the whole system: `make run` and `make test`.
-
-## Run on its own
+## Run
 
 ```sh
-.venv/bin/uvicorn agents.receiving.app:app --port 8101
-curl localhost:8101/health
+cd agents/receiving/round2 && npm ci && cd ../../..     # once; needs Node 20+
+# GEMINI_API_KEY=... in .env (never commit it)
+python -m orchestration.run --unit UNIT-0007 --org org_demo_alpha
+uvicorn agents.receiving.app:app --port 8101            # optional: HTTP mode (GET /health, POST /run)
 ```
-Then set `"mode": "http"` in `agent.json` if you want the orchestrator to call it over HTTP.
+
+## Demo units with photos
+
+| Unit | PO line | Photo |
+|---|---|---|
+| UNIT-0007 | USB-C Cable, 4 × 6 | open carton marked QTY 9 |
+| UNIT-0014 | LED Desk Lamp, 2 × 12 | open carton with water damage inside |
+| UNIT-0001 | Cotton Bath Towel, 1 × 24 | carton with water stain and a hole |
+
+The photos are real deliveries contributed by neighbours who consented to publication. They have no real PO, so these units are expected to raise exceptions.
+
+## Known limits (measured in the Round 2 eval)
+
+- Small punctures in a unit can be missed (F8).
+- The carton's colour can be read as the product's colour (F10).
+- Model-only counts are low confidence; an operator count (`context.operator_counts`) makes them medium or high.
+- Eval: 16 held-out cases from 13 photos. 0 masked failures; carton damage caught 9 of 9 with 0 false alarms. Details are in the Round 2 repo's `eval-report.md`.

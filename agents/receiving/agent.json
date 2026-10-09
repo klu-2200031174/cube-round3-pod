@@ -1,10 +1,10 @@
 {
   "stage": "receiving",
-  "agent_id": "receiving-stub@0",
-  "owner": "@github-handle-of-the-owner",
+  "agent_id": "receiving-manager@1.0.0",
+  "owner": "@Bhargav200",
   "mode": "inproc",
   "url": "http://localhost:8101",
   "module": "agents.receiving.app",
-  "implementation": "organiser-stub",
-  "notes": "Set mode to \"http\" if your agent is not Python or runs as its own service. Change implementation to a short honest description of what you built."
+  "implementation": "Round 2 Receiving Manager (TypeScript, copied unchanged into round2/) run through a thin Python adapter (app.py + bridge.ts). One blind Gemini 3.5 Flash-Lite vision call per unit describes the photos without seeing the PO; deterministic code compares that with the PO line and gives 9 per-check PASS / FAIL / UNCERTAIN verdicts. No photos gives all-UNCERTAIN and a human review; a model failure gives a pending record, never a guess.",
+  "notes": "In-process by default; also serves GET /health and POST /run: uvicorn agents.receiving.app:app --port 8101. Needs Node 20+, a one-time `npm ci` in agents/receiving/round2, and GEMINI_API_KEY in .env. Captures: data/input/<unit>/receiving/*.jpg (role from the file name: pallet, carton, unit, label)."
 }
