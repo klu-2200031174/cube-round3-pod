@@ -174,6 +174,44 @@ const HEAD = { receiving: (e) => ({ v: e.decision.verdict, t: { accept: "ACCEPT"
   pack: (e) => ({ v: e.decision.verdict, t: e.payload.decision_label || { seal: "SEAL", stop_and_fix: "STOP & FIX", pending_review: "UNCERTAIN" }[e.decision.outcome] }),
   returns: (e) => ({ v: e.decision.verdict, t: "DISPOSITION: " + e.decision.outcome.toUpperCase() }),
   recovery: (e) => ({ v: e.decision.verdict, t: { claim_recommended: "CLAIM RECOMMENDED · " + money(e.payload.claimable_usd), no_claim: "NO CLAIM", insufficient_evidence: "SILENT — insufficient evidence", pending_review: "PENDING" }[e.decision.outcome] }) };
+const formatRoute = (r) => {
+  const s = (r || "").toLowerCase();
+  if (s === "fba") return "STANDARD";
+  if (s === "mfn") return "MERCHANT";
+  return (r || "—").toUpperCase();
+};
+
+const CHECK_LABELS = {
+  polybag_sealed: "Protective Bag Sealed",
+  suffocation_warning: "Safety Warning Present",
+  fnsku_label_placement: "Product Label Placement",
+  fnsku_text_match: "Product Identifier Match",
+  original_barcode_covered: "Existing Barcode Covered",
+  handling_marks: "Handling Instructions Present",
+  po_number_present: "PO Number Verification",
+  box_count_match: "Box Count Reconciliation",
+  outer_carton_damage: "Outer Carton Integrity",
+  seal_intact: "Security Seal Inspection",
+  pallet_condition: "Pallet Condition Audit",
+  safety_hazard: "Hazard & Safety Screening",
+  item_condition: "Item Physical Grading",
+  sku_match: "SKU Verification",
+  quantity_match: "Quantity Census Reconciliation",
+  empty_box_check: "Carton Content Verification",
+  wrong_item_check: "Item Identity Audit",
+  missing_item_check: "Census Completeness Audit",
+  extra_item_check: "Unexpected Item Screening",
+  item_condition_grade: "Condition Assessment",
+  swap_fraud_check: "Item Identity & Swap Fraud",
+  accessories_check: "Accessories Completeness",
+  inbound_defect_fee: "Inbound Processing Discrepancy",
+  lost_inbound: "Inbound Transit Loss",
+  damaged_in_warehouse: "Warehouse Handling Damage",
+  refund_issued_item_not_returned: "Unreturned Customer Refund",
+  fulfilment_fee_weight_tier: "Fulfillment Fee Discrepancy"
+};
+const formatCheckKey = (k) => CHECK_LABELS[k] || (k || "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
 function renderEvidence(e, into) {
   const hd = (HEAD[e.stage] || ((x) => ({ v: x.decision.verdict, t: x.decision.outcome })))(e);
   const conf = e.decision.confidence;
@@ -255,7 +293,7 @@ function renderEvidence(e, into) {
         ) : null;
 
         return h("tr", {},
-          h("td", { class: "check-key-cell" }, c.check_key),
+          h("td", { class: "check-key-cell", title: c.check_key }, formatCheckKey(c.check_key)),
           h("td", {}, badge(c.verdict)),
           h("td", { style: "font-size:12px;line-height:1.45;color:var(--mute);max-width:240px;" }, show(c.expected)),
           h("td", { style: "font-size:12px;line-height:1.45;color:var(--ink);max-width:240px;font-weight:500;" }, show(c.observed)),
@@ -560,28 +598,28 @@ function prepForm() {
     h("div", { class: "agent-section-card" },
       h("h3", {},
         h("span", { class: "icon" }, "🏷"),
-        "FBA Work Order & Item Specification"
+        "Preparation Work Order & Item Specification"
       ),
       h("div", { style: "margin-bottom:14px;" },
-        field("Select catalog product (auto-populates SKU, expected FNSKU & requirements)", pSel)
+        field("Select catalog product (auto-populates SKU, expected product label & requirements)", pSel)
       ),
       h("div", { class: "form-grid g2" },
         field("SKU", f.sku),
-        field("Expected FNSKU (label text)", f.fnsku)
+        field("Expected Product Label / Identifier", f.fnsku)
       )
     ),
     h("div", { class: "agent-section-card" },
       h("h3", {},
         h("span", { class: "icon" }, "🛡"),
-        "Amazon FBA Packaging Requirements"
+        "Packaging & Handling Requirements"
       ),
       h("div", { class: "toggle-card-group" },
-        createToggleRow("Poly Bag Required", "Transparent, fully sealed barrier around item", f.poly),
-        createToggleRow("Suffocation Warning Required", "Mandatory label for bag openings >= 5 inches", f.suf),
+        createToggleRow("Protective Bag Required", "Transparent, fully sealed barrier around item", f.poly),
+        createToggleRow("Safety Warning Required", "Mandatory label for bag openings >= 5 inches", f.suf),
         createToggleRow("Expiration Date Visible", "Must remain clearly scannable and unobstructed", f.exp)
       ),
       h("div", { style: "margin-top:14px;margin-bottom:6px;" },
-        h("label", { style: "font-size:12px;font-weight:600;color:var(--ink);" }, "Required Handling Marks")
+        h("label", { style: "font-size:12px;font-weight:600;color:var(--ink);" }, "Required Handling Instructions")
       ),
       h("div", { class: "chip-group" },
         ...chipElements
@@ -589,13 +627,13 @@ function prepForm() {
       h("div", { class: "note" },
         h("div", { class: "note-title" },
           h("span", { style: "color:var(--cyan);font-weight:800;" }, "✦"),
-          "AI Visual Prep Inspection Rules (fba@1 rules engine)"
+          "AI Visual Preparation Inspection Rules"
         ),
         h("ul", {},
-          h("li", {}, h("b", {}, "Polybag:"), " Verified present and fully sealed against contaminants."),
-          h("li", {}, h("b", {}, "Suffocation Warning:"), " Verified visible, legible, and proportionate to bag size."),
-          h("li", {}, h("b", {}, "FNSKU Placement:"), " Verified on a flat scannable surface (fails across seams/curved edges)."),
-          h("li", {}, h("b", {}, "Original Barcodes:"), " Pre-existing manufacturer barcode verified covered."),
+          h("li", {}, h("b", {}, "Protective Bag:"), " Verified present and fully sealed against contaminants."),
+          h("li", {}, h("b", {}, "Safety Warning:"), " Verified visible, legible, and proportionate to bag size."),
+          h("li", {}, h("b", {}, "Product Label Placement:"), " Verified on a flat scannable surface (fails across seams/curved edges)."),
+          h("li", {}, h("b", {}, "Existing Product Barcodes:"), " Pre-existing manufacturer barcode verified covered."),
           h("li", {}, h("b", {}, "Physical Thickness:"), " Recognized as non-verifiable from images (never guessed or hallucinated).")
         )
       )
@@ -715,9 +753,9 @@ function returnsForm() {
       info
     ),
     h("div", { class: "agent-section-card" },
-      h("h3", {}, h("span", { class: "icon" }, "🔍"), "Amazon Condition Grading & Disposition Standards"),
+      h("h3", {}, h("span", { class: "icon" }, "🔍"), "Condition Grading & Disposition Standards"),
       h("div", { class: "note" },
-        h("b", {}, "Amazon Returns Multi-Modal Inspection Scale:"),
+        h("b", {}, "Returns Multi-Modal Inspection Scale:"),
         h("ul", { style: "margin:6px 0 0;padding-left:18px;font-size:12px;line-height:1.6;" },
           h("li", {}, h("b", {}, "Identity:"), " Verifies physical item matches catalog signature (flags swap fraud)."),
           h("li", {}, h("b", {}, "Completeness:"), " Audits essential cables, adaptors, and accessories."),
@@ -906,8 +944,8 @@ async function recoveryPage(m, embedded) {
 
 // ---------------------------------------------------------------- pipeline
 async function pipelinePage(m) {
-  m.append(h("h2", {}, "🔗 Full pipeline — one unit through all agents"), h("p", { class: "sub" }, "Receiving → Prep (FBA) or Pack (merchant) → Returns (optional) → Recovery. Evidence flows forward; the orchestrator derives the final outcome."));
-  const rcv = receivingForm(), prep = prepForm(), pack = packForm(), ret = returnsForm(); const route = h("select", {}, h("option", { value: "mfn" }, "Merchant-fulfilled / 3PL → Pack"), h("option", { value: "fba" }, "FBA → Prep"));
+  m.append(h("h2", {}, "🔗 Full pipeline — one unit through all agents"), h("p", { class: "sub" }, "Receiving → Prep (Standard Fulfillment) or Pack (Merchant Fulfillment) → Returns (optional) → Recovery. Evidence flows forward; the orchestrator derives the final outcome."));
+  const rcv = receivingForm(), prep = prepForm(), pack = packForm(), ret = returnsForm(); const route = h("select", {}, h("option", { value: "mfn" }, "Merchant-Fulfilled / Direct Ship → Pack"), h("option", { value: "fba" }, "Standard Warehouse Fulfillment → Prep"));
   const wantRet = h("input", { type: "checkbox" }); const fees = h("textarea", { style: "min-height:120px" }); fees.value = EX; const out = h("div");
   const sec = (t, ...k) => h("div", { class: "card" }, h("h3", {}, t), ...k); const prepC = sec("2 · Prep", prep.el), packC = sec("3 · Pack", pack.el), retC = sec("4 · Returns", ret.el);
   const sync = () => { prepC.style.display = route.value === "fba" ? "" : "none"; packC.style.display = route.value === "mfn" ? "" : "none"; retC.style.display = wantRet.checked ? "" : "none"; }; route.onchange = wantRet.onchange = sync; sync();
@@ -947,7 +985,7 @@ async function dashboard(m) {
 async function samples(m) {
   m.append(h("h2", {}, "🗂 Sample runs (organiser dataset)"), h("p", { class: "sub" }, "100 sample units. They have no photos, so agents replay the organiser's CSV rows (labelled csv-replay-stub) — use the agent pages to run real AI on your own photos."));
   const units = await api("/api/units"); const out = h("div"); const q = inp("", "text", "filter by unit, SKU, org…"); const body = h("tbody");
-  const draw = () => { body.replaceChildren(...units.filter((u) => (u.unit_id + u.sku + u.org_id + u.title).toLowerCase().includes(q.value.toLowerCase())).map((u) => h("tr", {}, h("td", { class: "mono" }, u.unit_id), h("td", {}, u.org_id.replace("org_demo_", "")), h("td", {}, u.title), h("td", {}, u.route), h("td", {}, u.returned ? "yes" : ""), h("td", {}, u.fees ? u.fees + " · " + money(u.fee_total) : ""),
+  const draw = () => { body.replaceChildren(...units.filter((u) => (u.unit_id + u.sku + u.org_id + u.title).toLowerCase().includes(q.value.toLowerCase())).map((u) => h("tr", {}, h("td", { class: "mono" }, u.unit_id), h("td", {}, u.org_id.replace("org_demo_", "")), h("td", {}, u.title), h("td", {}, formatRoute(u.route)), h("td", {}, u.returned ? "yes" : ""), h("td", {}, u.fees ? u.fees + " · " + money(u.fee_total) : ""),
     h("td", {}, h("button", { class: "ghost", onclick: async (e) => { e.target.disabled = true; try { const r = await api("/workflows", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ org_id: u.org_id, unit_id: u.unit_id }) }); const b = await api("/workflows/" + r.workflow_id + "/evidence"); renderBundle(b, out); } catch (x) { toast(x.message); } e.target.disabled = false; } }, "Run"))))); };
   q.oninput = draw; draw(); const all = h("button", { onclick: async () => { all.disabled = true; for (let i = 0; i < units.length; i++) { all.textContent = "Running " + (i + 1) + "/" + units.length; try { await api("/workflows", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ org_id: units[i].org_id, unit_id: units[i].unit_id }) }); } catch {} } all.textContent = "Done — open the dashboard"; } }, "Run all 100 samples");
   m.append(h("div", { class: "card" }, h("div", { class: "row" }, q, h("div", { class: "fix" }, all)), h("div", { style: "max-height:380px;overflow:auto;margin-top:10px" }, h("table", {}, h("thead", {}, h("tr", {}, ["Unit", "Org", "Product", "Route", "Returned", "Fees", ""].map((x) => h("th", {}, x)))), body))), out);
@@ -961,6 +999,6 @@ async function settings(m) {
   m.append(h("div", { class: "card" }, h("p", {}, "Status: ", c.key_set ? h("b", {}, "key set (" + c.key_hint + ")") : h("b", {}, "no key"), " · primary model ", h("span", { class: "mono" }, c.model), " · fallbacks ", h("span", { class: "mono" }, c.fallback_models.join(", "))),
     field("Groq API key", key), h("div", { style: "margin-top:12px;display:flex;gap:10px" }, save, test), res, h("p", { class: "mute" }, "Change models with GROQ_MODEL / GROQ_FALLBACK_MODELS in .env. Current vision models accept max 3 images per call; extra photos are tiled into numbered contact sheets.")),
     h("div", { class: "card" }, h("h3", {}, "How each agent uses Groq"), h("table", {}, h("tr", {}, ["Agent", "Groq does", "Code decides"].map((x) => h("th", {}, x))),
-      [["Receiving", "describes cartons/product blind to the PO", "match to PO, 9 checks, ACCEPT / EXCEPTION / REVIEW"], ["Prep", "reports what it sees per requirement", "FBA rule pack → PASS / FAIL / UNCERTAIN"], ["Pack", "lists items in the open box blind to the order", "SEAL / STOP & FIX / UNCERTAIN"],
-       ["Returns", "identity, parts, damage, grade on Amazon's scale", "ordered rule table → restock / refurbish / liquidate / dispose"], ["Recovery", "writes the claim explanation", "SUPPORTS / CONTRADICTS / SILENT + amounts"]].map((r) => h("tr", {}, r.map((x) => h("td", {}, x)))))));
+      [["Receiving", "describes cartons/product blind to the PO", "match to PO, 9 checks, ACCEPT / EXCEPTION / REVIEW"], ["Prep", "reports what it sees per requirement", "Packaging compliance rules → PASS / FAIL / UNCERTAIN"], ["Pack", "lists items in the open box blind to the order", "SEAL / STOP & FIX / UNCERTAIN"],
+       ["Returns", "identity, parts, damage, grade on standard condition scale", "ordered rule table → restock / refurbish / liquidate / dispose"], ["Recovery", "writes the claim explanation", "SUPPORTS / CONTRADICTS / SILENT + amounts"]].map((r) => h("tr", {}, r.map((x) => h("td", {}, x)))))));
 }

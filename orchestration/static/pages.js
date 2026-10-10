@@ -1,3 +1,9 @@
+const formatRoute = (r) => {
+  const s = (r || "").toLowerCase();
+  if (s === "fba") return "STANDARD";
+  if (s === "mfn") return "MERCHANT";
+  return (r || "—").toUpperCase();
+};
 "use strict";
 // Control-centre pages (Pod 13). Components (h, api, charts, renderEvidence, forms...) come from app.js.
 const CHIPS = ["ALL", "IN_PROGRESS", "BLOCKED", "FAILED", "RECOVERY_REQUIRED", "COMPLETED"];
@@ -104,7 +110,7 @@ function landing(m) {
           h("span", {}, "·"),
           h("span", {}, "SKU: B09X41-PRO"),
           h("span", {}, "·"),
-          h("span", {}, "ROUTE: MFN-DIRECT")
+          h("span", {}, "ROUTE: DIRECT-FULFILLMENT")
         ),
         h("div", { class: "stage-telemetry-tag" },
           h("span", { class: "spin", style: "width:10px;height:10px;border-width:1.5px;color:var(--emerald)" }),
@@ -115,7 +121,7 @@ function landing(m) {
       h("div", { class: "stage-pipeline-flow" },
         [
           ["01", "Receiving Manager", "ACCEPT", "PO Match 100%"],
-          ["02", "Prep Manager", "PASS", "FBA Compliant"],
+          ["02", "Prep Manager", "PASS", "Packaging Compliant"],
           ["03", "Pack Manager", "SEAL", "Census Verified"],
           ["04", "Returns Manager", "RESTOCK", "Condition: Like-New"],
           ["05", "Recovery Manager", "CLAIM $38.00", "Packaging Defect Audit"]
@@ -186,15 +192,15 @@ function landing(m) {
         ),
         h("h3", { class: "agent-card-title" }, "Prep Manager"),
         h("p", { class: "agent-card-role" },
-          "Amazon FBA compliance enforcement, polybag specifications, and scannable barcode verification."
+          "Packaging compliance enforcement, protective barrier specifications, and scannable barcode verification."
         ),
         h("ul", { class: "agent-specs-list" },
-          h("li", {}, "Checks suffocation warnings on polybags > 5 inches"),
-          h("li", {}, "Confirms barcode readability and FNSKU label coverage"),
+          h("li", {}, "Checks safety warnings on protective bags > 5 inches"),
+          h("li", {}, "Confirms barcode readability and product label coverage"),
           h("li", {}, "Flags non-verifiable attributes without guessing")
         ),
         h("div", { class: "agent-meta-footer" },
-          h("span", { class: "model mono" }, "Deterministic FBA Matrix"),
+          h("span", { class: "model mono" }, "Deterministic Rules Matrix"),
           h("span", { class: "verdict" }, "PASS · FAIL · UNCERTAIN")
         )
       ),
@@ -228,7 +234,7 @@ function landing(m) {
         ),
         h("h3", { class: "agent-card-title" }, "Returns Manager"),
         h("p", { class: "agent-card-role" },
-          "Reverse logistics grading against official Amazon condition rubrics. Detects swap fraud and audits accessories."
+          "Reverse logistics grading against standardized condition rubrics. Detects swap fraud and audits accessories."
         ),
         h("ul", { class: "agent-specs-list" },
           h("li", {}, "Detects product swap fraud against original catalog signatures"),
@@ -252,7 +258,7 @@ function landing(m) {
           "Financial fee reconciliation and automated claim generator. Audits charge line items against upstream evidence."
         ),
         h("ul", { class: "agent-specs-list" },
-          h("li", {}, "Cross-references Amazon chargebacks directly against Pack/Prep hashes"),
+          h("li", {}, "Cross-references inbound and fulfillment fee discrepancies directly against Pack/Prep hashes"),
           h("li", {}, "Generates defensible reimbursement claims with exact proof references"),
           h("li", {}, "Strict SILENT discipline: never asserts claims without verifiable evidence")
         ),
@@ -739,7 +745,7 @@ function wfTable(rows, host) {
         h("td", { class: "mono", style: "font-weight:600;color:var(--cyan);" }, r.workflow_id.replace("WF-", "")),
         h("td", { class: "mono" }, r.unit_id),
         h("td", {}, r.org_id.replace("org_", "")),
-        h("td", { class: "mono" }, r.route ? r.route.toUpperCase() : "—"),
+        h("td", { class: "mono" }, r.route ? formatRoute(r.route) : "—"),
         h("td", {}, r.returned ? h("span", { class: "badge", style: "background:#e0f2fe;color:#0369a1;" }, "YES") : h("span", { class: "mute" }, "NO")),
         h("td", {}, r.current_stage || "—"),
         h("td", {}, badge(r.status)),
@@ -861,8 +867,8 @@ function runModal(done) {
 
     const filters = [
       ["ALL", "All Units (" + units.length + ")"],
-      ["FBA", "FBA"],
-      ["MFN", "MFN"],
+      ["FBA", "Standard Fulfillment"],
+      ["MFN", "Merchant Fulfillment"],
       ["RETURNED", "Returned Only"]
     ];
 
@@ -912,7 +918,7 @@ function runModal(done) {
             )
           ),
           h("div", { class: "unit-picker-card-right" },
-            h("span", { class: "badge", style: "font-size:11px;" }, (u.route || "UNKNOWN").toUpperCase()),
+            h("span", { class: "badge", style: "font-size:11px;" }, formatRoute(u.route)),
             u.returned ? h("span", { class: "badge", style: "background:#e0f2fe;color:#0369a1;font-size:11px;" }, "RETURNED") : null,
             h("span", { class: "unit-select-indicator" }, isSelected ? "✓" : "○")
           )
@@ -984,7 +990,7 @@ async function unitsPage(m) {
         h("div", { style: "font-weight:600;color:var(--ink);" }, u.title),
         h("div", { class: "mute mono", style: "font-size:11px;" }, u.sku)
       ),
-      h("td", {}, h("span", { class: "badge route-" + u.route.toLowerCase() }, u.route.toUpperCase())),
+      h("td", {}, h("span", { class: "badge route-" + u.route.toLowerCase() }, formatRoute(u.route))),
       h("td", {}, u.returned ? h("span", { class: "badge", style: "background:#e0f2fe;color:#0369a1;" }, "YES") : h("span", { class: "mute" }, "NO")),
       h("td", {}, u.fees ? u.fees + " · " + money(u.fee_total) : h("span", { class: "mute" }, "—")),
       h("td", {}, w ? badge(w.outcome || w.status) : h("span", { class: "mute" }, "not run")),
@@ -1170,14 +1176,14 @@ async function livePage(m) {
   const rcv = receivingForm(), prep = prepForm(), pack = packForm(), ret = returnsForm();
   const route_ = h("select", {},
     h("option", { value: "all" }, "All 5 Agents (Receiving → Prep → Pack → Returns → Recovery)"),
-    h("option", { value: "fba" }, "Fulfillment by Amazon (FBA) → Prep"),
-    h("option", { value: "mfn" }, "Merchant-fulfilled / 3PL → Pack")
+    h("option", { value: "fba" }, "Standard Warehouse Fulfillment (Prep)"),
+    h("option", { value: "mfn" }, "Merchant-Fulfilled / Direct Ship (Pack)")
   );
   const wantRet = h("input", { type: "checkbox", checked: true });
   const parBox = h("input", { type: "checkbox", checked: true });
   const step = (n, t, who, ...k) => h("div", { class: "card step" }, h("div", { class: "row", style: "align-items:center" }, h("span", { class: "num" }, n), h("div", {}, h("h3", { style: "margin:0;font-size:18px" }, t), h("div", { class: "mute" }, who))), ...k);
-  const prepC = step("02", "Prep: packaging & labelling", "Prep Manager · FBA units", prep.el);
-  const packC = step("03", "Pack: open-box check", "Pack Manager · merchant-fulfilled units", pack.el);
+  const prepC = step("02", "Prep: packaging & labelling", "Prep Manager · Preparation units", prep.el);
+  const packC = step("03", "Pack: open-box check", "Pack Manager · Merchant-fulfilled units", pack.el);
   const retC = step("04", "Returns: returned item", "Returns Manager · customer return inspection", ret.el);
   const sync = () => {
     prepC.style.display = (route_.value === "fba" || route_.value === "all") ? "" : "none";
@@ -1348,9 +1354,9 @@ const PG = {
 
 Object.assign(PG, {
   "console-receiving": stagePage("receiving", "1 · Receiving Manager", "Dock inbound inspection, purchase order reconciliation, and physical carton damage grading.", receivingForm),
-  "console-prep": stagePage("prep", "2 · Prep Manager", "Amazon FBA packaging compliance, polybag warning labels, and scannable barcode verification.", prepForm),
+  "console-prep": stagePage("prep", "2 · Prep Manager", "Packaging compliance, protective safety labels, and scannable barcode verification.", prepForm),
   "console-pack": stagePage("pack", "3 · Pack Manager", "Outbound carton census audit prior to taping. Detects missing items, wrong variants, and extra items.", packForm),
-  "console-returns": stagePage("returns", "4 · Returns Manager", "Reverse logistics condition evaluation against Amazon rubrics and customer return swap fraud detection.", returnsForm),
+  "console-returns": stagePage("returns", "4 · Returns Manager", "Reverse logistics condition evaluation against standard grading rubrics and customer return swap fraud detection.", returnsForm),
   "console-recovery": recoveryPage,
   "console-pipeline": livePage
 });
