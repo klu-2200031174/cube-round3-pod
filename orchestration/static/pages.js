@@ -759,11 +759,11 @@ async function workflows(m) {
   search.oninput = () => { q = search.value; draw(); };
   m.append(h("div", { class: "row card" }, search, h("div", { class: "fix" }, h("button", { onclick: () => runModal(async () => { rows = await api("/api/workflow-list"); draw(); }) }, "+ Run Workflow"))), host); draw();
 }
-async function runModal(done) {
-  const units = await api("/api/units");
-  let selectedUnit = units[0] ? units[0].org_id + "|" + units[0].unit_id : "";
+function runModal(done) {
+  let selectedUnit = "";
   let currentFilter = "ALL";
   let searchQuery = "";
+  let units = [];
 
   const msg = h("div", { class: "modal-alert", style: "display:none;" });
   const ov = h("div", { class: "overlay" });
@@ -777,97 +777,19 @@ async function runModal(done) {
   });
 
   const filterChips = h("div", { class: "unit-filter-chips", style: "display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;" });
-  const filters = [
-    ["ALL", "All Units (" + units.length + ")"],
-    ["FBA", "FBA"],
-    ["MFN", "MFN"],
-    ["RETURNED", "Returned Only"]
-  ];
+  const benchmarkTab = h("button", { type: "button", class: "modal-tab active" }, "Benchmark Units (…)");
 
-  const listContainer = h("div", { class: "unit-picker-scroll-list" });
-
-  const renderList = () => {
-    const q = searchQuery.toLowerCase();
-    const filtered = units.filter(u => {
-      const matchFilter = currentFilter === "ALL" ||
-        (currentFilter === "FBA" && u.route.toLowerCase() === "fba") ||
-        (currentFilter === "MFN" && u.route.toLowerCase() === "mfn") ||
-        (currentFilter === "RETURNED" && u.returned);
-
-      const matchSearch = !q ||
-        u.unit_id.toLowerCase().includes(q) ||
-        (u.sku || "").toLowerCase().includes(q) ||
-        (u.title || "").toLowerCase().includes(q) ||
-        u.route.toLowerCase().includes(q) ||
-        u.org_id.toLowerCase().includes(q);
-
-      return matchFilter && matchSearch;
-    });
-
-    if (filtered.length === 0) {
-      listContainer.replaceChildren(
-        h("div", { style: "padding:24px;text-align:center;color:var(--mute);font-size:13px;" }, "No matching inventory units found.")
-      );
-      return;
-    }
-
-    const items = filtered.map(u => {
-        const val = u.org_id + "|" + u.unit_id;
-        const isSelected = selectedUnit === val;
-        const item = h("div", {
-          class: "unit-picker-card" + (isSelected ? " selected" : ""),
-          onclick: () => {
-            selectedUnit = val;
-            renderList();
-          }
-        },
-          h("div", { class: "unit-picker-card-left" },
-            h("div", { style: "display:flex;align-items:center;gap:8px;margin-bottom:2px;" },
-              h("span", { class: "unit-tag mono" }, u.unit_id),
-              h("span", { class: "unit-title" }, u.title)
-            ),
-            h("div", { class: "unit-sub mute" },
-              h("span", {}, "SKU: " + (u.sku || "—")),
-              h("span", {}, " · Org: " + u.org_id.replace("org_demo_", ""))
-            )
-          ),
-          h("div", { class: "unit-picker-card-right" },
-            h("span", { class: "badge", style: "font-size:11px;" }, u.route.toUpperCase()),
-            u.returned ? h("span", { class: "badge", style: "background:#e0f2fe;color:#0369a1;font-size:11px;" }, "RETURNED") : null,
-            h("span", { class: "unit-select-indicator" }, isSelected ? "✓" : "○")
-          )
-        );
-        return item;
-      });
-
-    listContainer.replaceChildren(...items);
-  };
-
-  filters.forEach(([key, label]) => {
-    const chip = h("button", {
-      type: "button",
-      class: "chip" + (currentFilter === key ? " on" : ""),
-      style: "font-size:11.5px;padding:4px 10px;",
-      onclick: () => {
-        currentFilter = key;
-        filterChips.querySelectorAll(".chip").forEach(c => c.classList.remove("on"));
-        chip.classList.add("on");
-        renderList();
-      }
-    }, label);
-    filterChips.append(chip);
-  });
-
-  searchInput.oninput = () => {
-    searchQuery = searchInput.value.trim();
-    renderList();
-  };
-
-  renderList();
+  const listContainer = h("div", { class: "unit-picker-scroll-list" },
+    h("div", { style: "padding:36px 20px;text-align:center;color:var(--mute);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:10px;" },
+      h("span", { class: "spin", style: "width:22px;height:22px;border-width:2.5px;" }),
+      h("span", {}, "Loading benchmark inventory units…")
+    )
+  );
 
   const go = h("button", {
     class: "btn btn-accent",
     style: "min-width:160px;",
+    disabled: true,
     onclick: async () => {
       if (!selectedUnit) return;
       go.disabled = true;
@@ -901,7 +823,7 @@ async function runModal(done) {
       h("button", { class: "modal-close-btn", type: "button", onclick: close, title: "Close" }, "✕")
     ),
     h("div", { class: "modal-tabs" },
-      h("button", { type: "button", class: "modal-tab active" }, "Benchmark Units (" + units.length + ")"),
+      benchmarkTab,
       h("a", { class: "modal-tab", href: "#live", onclick: close }, "Interactive Custom Pipeline →")
     ),
     h("div", { class: "modal-body" },
@@ -924,6 +846,114 @@ async function runModal(done) {
 
   ov.append(modal);
   document.body.append(ov);
+
+  api("/api/units").then(loadedUnits => {
+    units = Array.isArray(loadedUnits) ? loadedUnits : [];
+    if (!units.length) {
+      listContainer.replaceChildren(
+        h("div", { style: "padding:28px;text-align:center;color:var(--mute);font-size:13px;" }, "No inventory units returned from backend.")
+      );
+      return;
+    }
+    selectedUnit = units[0].org_id + "|" + units[0].unit_id;
+    go.disabled = false;
+    benchmarkTab.textContent = "Benchmark Units (" + units.length + ")";
+
+    const filters = [
+      ["ALL", "All Units (" + units.length + ")"],
+      ["FBA", "FBA"],
+      ["MFN", "MFN"],
+      ["RETURNED", "Returned Only"]
+    ];
+
+    const renderList = () => {
+      const q = searchQuery.toLowerCase();
+      const filtered = units.filter(u => {
+        const matchFilter = currentFilter === "ALL" ||
+          (currentFilter === "FBA" && (u.route || "").toLowerCase() === "fba") ||
+          (currentFilter === "MFN" && (u.route || "").toLowerCase() === "mfn") ||
+          (currentFilter === "RETURNED" && u.returned);
+
+        const matchSearch = !q ||
+          u.unit_id.toLowerCase().includes(q) ||
+          (u.sku || "").toLowerCase().includes(q) ||
+          (u.title || "").toLowerCase().includes(q) ||
+          (u.route || "").toLowerCase().includes(q) ||
+          u.org_id.toLowerCase().includes(q);
+
+        return matchFilter && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        listContainer.replaceChildren(
+          h("div", { style: "padding:24px;text-align:center;color:var(--mute);font-size:13px;" }, "No matching inventory units found.")
+        );
+        return;
+      }
+
+      const items = filtered.map(u => {
+        const val = u.org_id + "|" + u.unit_id;
+        const isSelected = selectedUnit === val;
+        return h("div", {
+          class: "unit-picker-card" + (isSelected ? " selected" : ""),
+          onclick: () => {
+            selectedUnit = val;
+            renderList();
+          }
+        },
+          h("div", { class: "unit-picker-card-left" },
+            h("div", { style: "display:flex;align-items:center;gap:8px;margin-bottom:2px;" },
+              h("span", { class: "unit-tag mono" }, u.unit_id),
+              h("span", { class: "unit-title" }, u.title)
+            ),
+            h("div", { class: "unit-sub mute" },
+              h("span", {}, "SKU: " + (u.sku || "—")),
+              h("span", {}, " · Org: " + u.org_id.replace("org_demo_", ""))
+            )
+          ),
+          h("div", { class: "unit-picker-card-right" },
+            h("span", { class: "badge", style: "font-size:11px;" }, (u.route || "UNKNOWN").toUpperCase()),
+            u.returned ? h("span", { class: "badge", style: "background:#e0f2fe;color:#0369a1;font-size:11px;" }, "RETURNED") : null,
+            h("span", { class: "unit-select-indicator" }, isSelected ? "✓" : "○")
+          )
+        );
+      });
+
+      listContainer.replaceChildren(...items);
+    };
+
+    filterChips.replaceChildren(
+      ...filters.map(([key, label]) => {
+        const chip = h("button", {
+          type: "button",
+          class: "chip" + (currentFilter === key ? " on" : ""),
+          style: "font-size:11.5px;padding:4px 10px;",
+          onclick: () => {
+            currentFilter = key;
+            filterChips.querySelectorAll(".chip").forEach(c => c.classList.remove("on"));
+            chip.classList.add("on");
+            renderList();
+          }
+        }, label);
+        return chip;
+      })
+    );
+
+    searchInput.oninput = () => {
+      searchQuery = searchInput.value.trim();
+      renderList();
+    };
+
+    renderList();
+  }).catch(err => {
+    listContainer.replaceChildren(
+      h("div", { style: "padding:24px;text-align:center;color:var(--fail);font-size:13px;" },
+        h("div", { style: "font-weight:700;margin-bottom:6px;" }, "Failed to load inventory units"),
+        h("div", { class: "mute", style: "font-size:12px;margin-bottom:12px;" }, err.message),
+        h("button", { class: "btn ghost btn-sm", onclick: () => { close(); runModal(done); } }, "↻ Retry")
+      )
+    );
+  });
 }
 // ---------------------------------------------------------------- units
 async function unitsPage(m) {

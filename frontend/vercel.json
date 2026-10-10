@@ -3,12 +3,24 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/static/:match*",
+      "destination": "/:match*"
+    },
+    {
       "source": "/api/:match*",
       "destination": "https://cube-round3-pod-pb6w.onrender.com/api/:match*"
     },
     {
       "source": "/health",
       "destination": "https://cube-round3-pod-pb6w.onrender.com/health"
+    },
+    {
+      "source": "/workflows",
+      "destination": "https://cube-round3-pod-pb6w.onrender.com/workflows"
+    },
+    {
+      "source": "/workflows/",
+      "destination": "https://cube-round3-pod-pb6w.onrender.com/workflows"
     },
     {
       "source": "/workflows/:match*",

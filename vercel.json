@@ -16,6 +16,14 @@
       "destination": "https://cube-round3-pod-pb6w.onrender.com/health"
     },
     {
+      "source": "/workflows",
+      "destination": "https://cube-round3-pod-pb6w.onrender.com/workflows"
+    },
+    {
+      "source": "/workflows/",
+      "destination": "https://cube-round3-pod-pb6w.onrender.com/workflows"
+    },
+    {
       "source": "/workflows/:match*",
       "destination": "https://cube-round3-pod-pb6w.onrender.com/workflows/:match*"
     }

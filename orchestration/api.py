@@ -54,6 +54,7 @@ def health() -> dict:
 
 
 @app.post("/workflows")
+@app.post("/workflows/")
 def create(body: dict) -> dict:
     org, subject = body.get("org_id"), body.get("subject_id") or body.get("unit_id")
     if not org or not subject:

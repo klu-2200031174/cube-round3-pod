@@ -36,7 +36,22 @@ function getApiBase() {
 async function api(path, opts) {
   const base = getApiBase();
   const url = base ? (base + (path.startsWith("/") ? path : "/" + path)) : path;
-  const r = await fetch(url, opts); let j = null;
+  let r;
+  try {
+    r = await fetch(url, opts);
+  } catch (err) {
+    if (!base && typeof location !== "undefined" && location.hostname && (location.hostname.includes("vercel.app") || (location.hostname !== "127.0.0.1" && location.hostname !== "localhost"))) {
+      const fallbackUrl = "https://cube-round3-pod-pb6w.onrender.com" + (path.startsWith("/") ? path : "/" + path);
+      try {
+        r = await fetch(fallbackUrl, opts);
+      } catch {
+        throw err;
+      }
+    } else {
+      throw err;
+    }
+  }
+  let j = null;
   try { j = await r.json(); } catch {}
   if (!r.ok) throw new Error((j && (j.detail?.toString?.() || j.error)) || r.statusText);
   return j;
