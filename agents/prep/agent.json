@@ -1,10 +1,10 @@
 {
   "stage": "prep",
-  "agent_id": "prep-stub@0",
-  "owner": "@github-handle-of-the-owner",
+  "agent_id": "prep-manager@0.1.0",
+  "owner": "@dheerajchandra28",
   "mode": "inproc",
   "url": "http://localhost:8102",
   "module": "agents.prep.app",
-  "implementation": "organiser-stub",
-  "notes": "Set mode to \"http\" if your agent is not Python or runs as its own service. Change implementation to a short honest description of what you built."
+  "implementation": "Python port of the organiser-provided reference Prep Manager (Manvith111/cube26-prp-0319-manvith111), with the reference's bugs fixed (see PROVENANCE.md). One batched Gemini vision call per unit reports observations only (met / not_met / cant_tell, which photo, where, the FNSKU label text); a deterministic rule pack (fba@1) turns them into one verdict per work-order requirement. No photos or a model failure gives UNCERTAIN / pending_review, never a guess. Does not measure weight or dimensions.",
+  "notes": "In-process by default. Also serves GET /health and POST /run: uvicorn agents.prep.app:app --port 8102. Needs GEMINI_API_KEY in .env to inspect photos; without it every photographed unit fails open to a pending record."
 }
