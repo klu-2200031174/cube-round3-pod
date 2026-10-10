@@ -589,7 +589,7 @@ async function overview(m) {
       h("p", { class: "sub" }, "Live operational state across the five-agent commerce workflow pipeline.")
     ),
     h("div", { class: "header-action-group" },
-      h("button", { onclick: () => runModal(async () => { route(); }) }, "+ Launch Workflow"),
+      h("button", { class: "btn-accent", onclick: () => runModal(async () => { route(); }) }, "+ Launch Workflow"),
       h("a", { class: "btn ghost", href: "#live" }, "Live Run →"),
       h("button", { class: "ghost", onclick: () => route() }, "↻ Refresh")
     )
@@ -604,19 +604,19 @@ async function overview(m) {
 
   // 6 Compact KPI cards
   const kpiItems = [
-    { label: "Workflows", val: k.workflows, sub: "Total tracked", icon: "☰" },
-    { label: "Clean Units", val: k.clean, sub: "Zero exceptions", icon: "✓", color: "var(--pass)" },
-    { label: "Exceptions", val: k.exceptions, sub: "Defects / mismatches", icon: "⚠", color: "var(--fail)" },
-    { label: "Claims Recommended", val: k.claims, sub: "Reimbursement ready", icon: "◈", color: "var(--cyan)" },
-    { label: "Claimable Value", val: money(k.claimable_usd), sub: "Evidence-backed", icon: "$", color: "var(--emerald-dark)" },
-    { label: "Needs Review", val: k.needs_review, sub: "Pending human input", icon: "👤", color: k.needs_review > 0 ? "var(--unc)" : "var(--mute)" }
+    { label: "Workflows", val: k.workflows, sub: "Total tracked", icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>' },
+    { label: "Clean Units", val: k.clean, sub: "Zero exceptions", icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>', color: "var(--pass)" },
+    { label: "Exceptions", val: k.exceptions, sub: "Defects / mismatches", icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>', color: "var(--fail)" },
+    { label: "Claims Recommended", val: k.claims, sub: "Reimbursement ready", icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>', color: "var(--cyan)" },
+    { label: "Claimable Value", val: money(k.claimable_usd), sub: "Evidence-backed", icon: '<span style="font-family:var(--font-mono);font-weight:700;">$</span>', color: "var(--emerald-dark)" },
+    { label: "Needs Review", val: k.needs_review, sub: "Pending human input", icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>', color: k.needs_review > 0 ? "var(--unc)" : "var(--mute)" }
   ];
 
   const kpiGrid = h("div", { class: "overview-kpi-grid" },
     kpiItems.map(item => h("div", { class: "kpi-card-compact" },
       h("div", { class: "kpi-compact-label" },
         h("span", {}, item.label),
-        h("span", { style: "font-size:13px;" }, item.icon)
+        (() => { const s = document.createElement("span"); s.style.display = "inline-flex"; s.style.alignItems = "center"; s.innerHTML = item.icon; return s; })()
       ),
       h("div", { class: "kpi-compact-val", style: item.color ? `color:${item.color}` : "" }, item.val),
       h("div", { class: "kpi-compact-sub" }, item.sub)
@@ -992,52 +992,85 @@ async function livePage(m) {
   );
 }
 // ---------------------------------------------------------------- shell + router (Enterprise Grouped Navigation)
+
+// ---------------------------------------------------------------- SVG Icon System
+const NAV_ICONS = {
+  globe: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  key: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  overview: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+  live: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  workflows: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  units: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+  receiving: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  prep: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  pack: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+  returns: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  recovery: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  graph: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+  fleet: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  queue: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>',
+  vault: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  hub: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  failures: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  analytics: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  system: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
+};
+
+function createSvgIcon(name) {
+  const span = document.createElement("span");
+  span.style.display = "inline-flex";
+  span.style.alignItems = "center";
+  span.style.justifyContent = "center";
+  span.innerHTML = NAV_ICONS[name] || "";
+  return span;
+}
+
 const NAV_GROUPS = [
   {
     title: null,
     items: [
-      ["overview", "Overview", "▦"]
+      ["overview", "Overview", "overview"]
     ]
   },
   {
     title: "Operations",
     items: [
-      ["live", "Live Run", "▶"],
-      ["workflows", "Workflows", "☰"],
-      ["units", "Units", "◫"]
+      ["live", "Live Run", "live"],
+      ["workflows", "Workflows", "workflows"],
+      ["units", "Units", "units"]
     ]
   },
   {
     title: "Five Agents",
     items: [
-      ["console-receiving", "Receiving", "📥"],
-      ["console-prep", "Prep", "🏷"],
-      ["console-pack", "Pack", "📦"],
-      ["console-returns", "Returns", "↩"],
-      ["console-recovery", "Recovery", "$"]
+      ["console-receiving", "Receiving", "receiving"],
+      ["console-prep", "Prep", "prep"],
+      ["console-pack", "Pack", "pack"],
+      ["console-returns", "Returns", "returns"],
+      ["console-recovery", "Recovery", "recovery"]
     ]
   },
   {
     title: "Intelligence",
     items: [
-      ["orchestration", "Orchestration Graph", "⛭"],
-      ["agents", "Agents Fleet", "✦"]
+      ["orchestration", "Orchestration Graph", "graph"],
+      ["agents", "Agents Fleet", "fleet"]
     ]
   },
   {
     title: "Evidence & Decisions",
     items: [
-      ["queue", "Review Queue", "✓"],
-      ["evidence", "Evidence Vault", "⛓"],
-      ["recovery", "Recovery Hub", "◈"]
+      ["queue", "Review Queue", "queue"],
+      ["evidence", "Evidence Vault", "vault"],
+      ["recovery", "Recovery Hub", "hub"]
     ]
   },
   {
     title: "Analytics & Settings",
     items: [
-      ["failures", "Failures", "⚠"],
-      ["analytics", "Analytics", "◔"],
-      ["system", "Pod / System", "⚙"]
+      ["failures", "Failures", "failures"],
+      ["analytics", "Analytics", "analytics"],
+      ["system", "Pod / System", "system"]
     ]
   }
 ];
@@ -1073,27 +1106,34 @@ function shell() {
   if (!container || !aside) return;
   container.replaceChildren();
 
-  // Portal & Login links
-  const portalLinks = h("div", { style: "display:flex;gap:4px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle);" },
-    h("a", { class: "nav-item", "data-p": "", href: "#", title: "Landing Page", style: "flex:1;" }, h("i", {}, "🌐"), h("span", {}, "Portal Home")),
-    h("a", { class: "nav-item", "data-p": "login", href: "#login", title: "Demo Login", style: "flex:1;" }, h("i", {}, "🔐"), h("span", {}, "Demo Login"))
+  // Clean top navigation links (stacked, no text truncation!)
+  const topActions = h("div", { class: "sidebar-top-actions" },
+    h("a", { class: "sidebar-top-link", href: "#", title: "Customer Portal Home" },
+      createSvgIcon("globe"),
+      h("span", {}, "Portal Home"),
+      h("span", { class: "top-link-arrow" }, "↗")
+    ),
+    h("a", { class: "sidebar-top-link", href: "#login", title: "Demo Authentication" },
+      createSvgIcon("key"),
+      h("span", {}, "Demo Login")
+    )
   );
-  container.append(portalLinks);
+  container.append(topActions);
 
   NAV_GROUPS.forEach(group => {
     if (group.title) {
       container.append(h("div", { class: "nav-section-title" }, group.title));
     }
-    group.items.forEach(([key, label, icon]) => {
+    group.items.forEach(([key, label, iconKey]) => {
       const a = h("a", { class: "nav-item", "data-p": key, href: "#" + key, title: label },
-        h("i", {}, icon),
+        h("i", {}, createSvgIcon(iconKey)),
         h("span", {}, label)
       );
       container.append(a);
     });
   });
 
-  // Collapsible sidebar toggle button logic
+  // Collapsible sidebar toggle button
   const collapseBtn = $("#sidebar-collapse-btn");
   if (collapseBtn) {
     collapseBtn.onclick = () => {
@@ -1103,7 +1143,7 @@ function shell() {
     };
   }
 
-  // Mobile navigation drawer toggle logic
+  // Mobile navigation drawer toggle
   const mobileBtn = $("#mobile-menu-btn");
   const backdrop = $("#sidebar-backdrop");
   if (mobileBtn && backdrop) {

@@ -1,3 +1,24 @@
+
+/* Sleek Custom Scrollbars (Webkit & Standard) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* ==========================================================================
    CUBE POD 13 — ENTERPRISE AI OPERATIONS DASHBOARD
    Clean, Professional, Information-Dense Architecture
@@ -659,7 +680,7 @@ main {
   margin: 0;
 }
 
-input, select, textarea {
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
   width: 100%;
   height: var(--input-height);
   padding: 8px 12px;
@@ -843,14 +864,14 @@ tr:hover td {
 .mute { color: var(--mute); }
 
 button, .btn {
-  background: var(--cyan);
-  color: #fff;
-  border: 0;
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   height: var(--btn-height);
   padding: 0 16px;
   font: inherit;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -858,24 +879,68 @@ button, .btn {
   justify-content: center;
   gap: 6px;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(2, 132, 199, 0.2);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
-button:hover { background: var(--cyan-hover); }
-button.ghost {
-  background: var(--bg-surface);
+button:hover, .btn:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.12);
+}
+
+button:active, .btn:active {
+  transform: translateY(0);
+}
+
+button.ghost, .btn.ghost {
+  background: #ffffff;
   color: var(--ink);
   border: 1px solid var(--border);
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
-button.ghost:hover {
+button.ghost:hover, .btn.ghost:hover {
   background: var(--bg-secondary);
   border-color: var(--border-strong);
+  color: var(--ink);
+  transform: translateY(-1px);
 }
 
-button:disabled {
-  opacity: 0.55;
+.btn-accent {
+  background: var(--cyan);
+  color: #fff;
+}
+.btn-accent:hover {
+  background: var(--cyan-hover);
+}
+
+.btn-primary-prominent {
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  border-radius: var(--radius-md);
+  height: 42px;
+  padding: 0 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+  width: 100%;
+}
+
+.btn-primary-prominent:hover:not(:disabled) {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(15, 23, 42, 0.2);
+}
+
+.btn-primary-prominent:disabled {
+  opacity: 0.6;
   cursor: wait;
 }
 
@@ -1079,4 +1144,297 @@ button:disabled {
   .sidebar-backdrop.active {
     display: block;
   }
+}
+
+
+/* ==========================================================================
+   ULTRA-PREMIUM FORM CONTROLS & SWITCHES
+   ========================================================================== */
+input[type="checkbox"], input[type="radio"] {
+  width: 16px !important;
+  height: 16px !important;
+  accent-color: #0284c7;
+  cursor: pointer;
+  margin: 0;
+  vertical-align: middle;
+}
+
+/* Toggle Switch Row (Linear / Stripe / Apple Design) */
+.toggle-card-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-row:hover {
+  border-color: var(--border-strong);
+  background: #f8fafc;
+}
+
+.toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.toggle-desc {
+  font-size: 11.5px;
+  color: var(--mute);
+}
+
+/* Switch Component */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute;
+  margin: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #cbd5e1;
+  transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 999px;
+}
+
+.switch-slider::before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+}
+
+.switch input:checked + .switch-slider {
+  background-color: #0284c7;
+}
+
+.switch input:checked + .switch-slider::before {
+  transform: translateX(16px);
+}
+
+/* Chip Toggles (Handling Marks) */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.chip-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.chip-toggle:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-secondary);
+  color: var(--ink);
+}
+
+.chip-toggle.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+}
+
+.chip-toggle.active .chip-icon {
+  color: #38bdf8;
+}
+
+/* Sidebar Top Actions (No truncation / clipping) */
+.sidebar-top-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sidebar-top-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-subtle);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.sidebar-top-link:hover {
+  background: var(--bg-secondary);
+  color: var(--ink);
+}
+
+.sidebar-top-link i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mute);
+}
+
+.sidebar-top-link .top-link-arrow {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--mute);
+}
+
+/* Callout Note */
+.note {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cyan);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+}
+
+.note.warn {
+  border-left-color: var(--unc);
+  background: var(--unc-bg);
+}
+
+.note-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+
+.note ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+
+/* Checkbox and radio label row */
+.chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 6px 0;
+}
+
+.chk input[type="checkbox"],
+.chk input[type="radio"] {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  flex-shrink: 0;
+  accent-color: var(--cyan);
+  cursor: pointer;
+}
+
+/* Polished Card Step in Live Run */
+.card.step {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 18px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.card.step .num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--bg-secondary);
+  color: var(--cyan-hover);
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-right: 12px;
+  border: 1px solid var(--border);
+}
+
+/* Polished Dropzone */
+.drop {
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--ink-subtle);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.drop:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.drop.over {
+  border-color: #0284c7;
+  background: #e0f2fe;
 }

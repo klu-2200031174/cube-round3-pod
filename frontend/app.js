@@ -59,7 +59,7 @@ function dropzone(withRoles) {
   zone.ondrop = (e) => { e.preventDefault(); zone.classList.remove("over"); add(e.dataTransfer.files); };
   return { el: h("div", {}, zone, input, thumbs), files, roles: () => files.map((f) => f.role) };
 }
-const field = (label, input) => h("div", {}, h("label", {}, label), input);
+const field = (label, input) => h("div", { class: "form-field" }, h("label", {}, label), input);
 const inp = (v = "", type = "text", ph = "") => h("input", { type, value: v, placeholder: ph });
 // ---------------------------------------------------------------- result rendering
 const HEAD = { receiving: (e) => ({ v: e.decision.verdict, t: { accept: "ACCEPT", accept_with_exceptions: "EXCEPTION", reject: "REJECT", pending_review: "UNCERTAIN — REVIEW" }[e.decision.outcome] }),
@@ -276,6 +276,21 @@ function receivingForm() {
   return { el, dz, collect };
 }
 
+
+function createToggleRow(title, desc, input) {
+  const row = h("label", { class: "toggle-row" },
+    h("div", { class: "toggle-info" },
+      h("div", { class: "toggle-title" }, title),
+      h("div", { class: "toggle-desc" }, desc)
+    ),
+    h("div", { class: "switch" },
+      input,
+      h("span", { class: "switch-slider" })
+    )
+  );
+  return row;
+}
+
 function prepForm() {
   const PREP_PRODUCTS = [
     { sku: "SKU-CANDLE-3", fnsku: "X00DUMMY002", title: "Soy Candle Trio Gift Box", poly: true, suf: true, exp: false, marks: ["Fragile"] },
@@ -302,7 +317,26 @@ function prepForm() {
     exp: h("input", { type: "checkbox", checked: init.exp })
   };
   const markDefs = ["Fragile", "This Way Up", "Liquid", "Glass", "Keep Dry", "Heavy"];
-  const marks = markDefs.map((m) => h("input", { type: "checkbox", value: m, checked: init.marks.includes(m) }));
+  const marks = markDefs.map((m) => h("input", { type: "checkbox", value: m, checked: init.marks.includes(m), style: "display:none;" }));
+
+  // Interactive Chip Toggles
+  const chipElements = markDefs.map((m, i) => {
+    const isAct = init.marks.includes(m);
+    const chip = h("button", {
+      type: "button",
+      class: "chip-toggle" + (isAct ? " active" : ""),
+      onclick: () => {
+        marks[i].checked = !marks[i].checked;
+        chip.classList.toggle("active", marks[i].checked);
+        const icon = chip.querySelector(".chip-icon");
+        if (icon) icon.textContent = marks[i].checked ? "✓" : "+";
+      }
+    },
+      h("span", { class: "chip-icon" }, isAct ? "✓" : "+"),
+      m
+    );
+    return chip;
+  });
 
   pSel.onchange = () => {
     if (pSel.value === "custom") return;
@@ -313,15 +347,24 @@ function prepForm() {
     f.poly.checked = p.poly;
     f.suf.checked = p.suf;
     f.exp.checked = p.exp;
-    markDefs.forEach((m, i) => { marks[i].checked = p.marks.includes(m); });
+    markDefs.forEach((m, i) => {
+      const active = p.marks.includes(m);
+      marks[i].checked = active;
+      chipElements[i].classList.toggle("active", active);
+      const icon = chipElements[i].querySelector(".chip-icon");
+      if (icon) icon.textContent = active ? "✓" : "+";
+    });
   };
 
   const dz = dropzone(false);
   const el = h("div", { style: "display:flex;flex-direction:column;gap:16px;" },
     h("div", { class: "agent-section-card" },
-      h("h3", {}, h("span", { class: "icon" }, "🏷"), "FBA Work Order & Item Specification"),
+      h("h3", {},
+        h("span", { class: "icon" }, "🏷"),
+        "FBA Work Order & Item Specification"
+      ),
       h("div", { style: "margin-bottom:14px;" },
-        field("Select product (auto-populates SKU, expected FNSKU & prep requirements)", pSel)
+        field("Select catalog product (auto-populates SKU, expected FNSKU & requirements)", pSel)
       ),
       h("div", { class: "form-grid g2" },
         field("SKU", f.sku),
@@ -329,29 +372,40 @@ function prepForm() {
       )
     ),
     h("div", { class: "agent-section-card" },
-      h("h3", {}, h("span", { class: "icon" }, "📋"), "Amazon FBA Packaging Requirements"),
-      h("div", { style: "display:flex;flex-direction:column;gap:8px;margin-bottom:12px;" },
-        h("label", { class: "chk" }, f.poly, "Poly bag required (transparent, fully sealed)"),
-        h("label", { class: "chk" }, f.suf, "Suffocation warning required (openings >= 5 inches)"),
-        h("label", { class: "chk" }, f.exp, "Has expiration date (must remain visible)")
+      h("h3", {},
+        h("span", { class: "icon" }, "🛡"),
+        "Amazon FBA Packaging Requirements"
       ),
-      h("label", { style: "font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;" }, "Required Handling Marks"),
-      h("div", { style: "display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;" },
-        markDefs.map((m, i) => h("label", { class: "chk" }, marks[i], m))
+      h("div", { class: "toggle-card-group" },
+        createToggleRow("Poly Bag Required", "Transparent, fully sealed barrier around item", f.poly),
+        createToggleRow("Suffocation Warning Required", "Mandatory label for bag openings >= 5 inches", f.suf),
+        createToggleRow("Expiration Date Visible", "Must remain clearly scannable and unobstructed", f.exp)
+      ),
+      h("div", { style: "margin-top:14px;margin-bottom:6px;" },
+        h("label", { style: "font-size:12px;font-weight:600;color:var(--ink);" }, "Required Handling Marks")
+      ),
+      h("div", { class: "chip-group" },
+        ...chipElements
       ),
       h("div", { class: "note" },
-        h("b", {}, "📋 AI Visual Prep Checks (fba@1 rules engine):"),
-        h("ul", { style: "margin:6px 0 0;padding-left:18px;font-size:12px;line-height:1.6;" },
-          h("li", {}, h("b", {}, "Polybag:"), " Verified present and fully sealed."),
-          h("li", {}, h("b", {}, "Suffocation Warning:"), " Verified visible and legible."),
-          h("li", {}, h("b", {}, "FNSKU Placement:"), " Verified on a flat scannable surface (fails across curved edges/seams)."),
+        h("div", { class: "note-title" },
+          h("span", { style: "color:var(--cyan);font-weight:800;" }, "✦"),
+          "AI Visual Prep Inspection Rules (fba@1 rules engine)"
+        ),
+        h("ul", {},
+          h("li", {}, h("b", {}, "Polybag:"), " Verified present and fully sealed against contaminants."),
+          h("li", {}, h("b", {}, "Suffocation Warning:"), " Verified visible, legible, and proportionate to bag size."),
+          h("li", {}, h("b", {}, "FNSKU Placement:"), " Verified on a flat scannable surface (fails across seams/curved edges)."),
           h("li", {}, h("b", {}, "Original Barcodes:"), " Pre-existing manufacturer barcode verified covered."),
-          h("li", {}, h("b", {}, "Physical Thickness:"), " Recognized as non-verifiable from images (never guessed).")
+          h("li", {}, h("b", {}, "Physical Thickness:"), " Recognized as non-verifiable from images (never guessed or hallucinated).")
         )
       )
     ),
     h("div", { class: "agent-section-card" },
-      h("h3", {}, h("span", { class: "icon" }, "📷"), "Prepared Unit Photographs"),
+      h("h3", {},
+        h("span", { class: "icon" }, "📷"),
+        "Prepared Unit Photographs"
+      ),
       h("p", { class: "mute", style: "margin:0 0 10px;font-size:12.5px;" }, "Upload photos of the prepared unit (front, back, label, warnings, seam)."),
       dz.el
     )
