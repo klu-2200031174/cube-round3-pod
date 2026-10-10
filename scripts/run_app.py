@@ -13,7 +13,7 @@ from shared.utils import groq_client  # noqa: E402
 groq_client.load_dotenv()
 port = int(os.environ.get("PORT", "8100"))
 print("=" * 60, f"\n  CUBE Commerce Managers  ->  http://127.0.0.1:{port}")
-print("  Groq:", "key found ✔" if groq_client.has_key() else "NO KEY yet - add GROQ_API_KEY to .env or paste it in the UI", "\n" + "=" * 60)
+print("  Groq:", "key found [OK]" if groq_client.has_key() else "NO KEY yet - add GROQ_API_KEY to .env or paste it in the UI", "\n" + "=" * 60)
 if os.environ.get("NO_BROWSER") != "1":
     threading.Thread(target=lambda: (time.sleep(1.5), webbrowser.open(f"http://127.0.0.1:{port}")), daemon=True).start()
 import uvicorn  # noqa: E402

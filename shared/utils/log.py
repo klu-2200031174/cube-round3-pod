@@ -28,6 +28,7 @@ def get_logger(name: str) -> logging.Logger:
         if os.environ.get("LOG_FORMAT", "json") == "json":
             handler.setFormatter(JsonFormatter())
         logger.addHandler(handler)
-        logger.setLevel(os.environ.get("LOG_LEVEL", "WARNING").upper())
+        raw_level = os.environ.get("LOG_LEVEL", "WARNING").split("#")[0].strip().upper() or "WARNING"
+        logger.setLevel(raw_level)
         logger.propagate = False
     return logger

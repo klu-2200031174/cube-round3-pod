@@ -147,6 +147,8 @@ from fastapi.staticfiles import StaticFiles
 STATIC_DIR = ROOT / "orchestration" / "static"
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="orchestrator_static")
+    if (STATIC_DIR / "vendor").exists():
+        app.mount("/vendor", StaticFiles(directory=str(STATIC_DIR / "vendor")), name="vendor_static")
 
     @app.get("/")
     def index():
@@ -155,3 +157,20 @@ if STATIC_DIR.exists():
     @app.get("/ui")
     def ui():
         return FileResponse(STATIC_DIR / "index.html")
+
+    @app.get("/login")
+    def login():
+        return FileResponse(STATIC_DIR / "index.html")
+
+    @app.get("/style.css")
+    def style_css():
+        return FileResponse(STATIC_DIR / "style.css")
+
+    @app.get("/app.js")
+    def app_js():
+        return FileResponse(STATIC_DIR / "app.js")
+
+    @app.get("/pages.js")
+    def pages_js():
+        return FileResponse(STATIC_DIR / "pages.js")
+

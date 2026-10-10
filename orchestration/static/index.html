@@ -1,14 +1,53 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CUBE Pod 13 · Commerce Control Center</title><link rel="stylesheet" href="/static/style.css"></head>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CUBE pod13 · Enterprise AI Operations Platform</title>
+  <meta name="description" content="CUBE Pod 13 — Enterprise AI Operations Dashboard. Multi-agent commerce workflow, vision audits, and automated fee recovery.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
 <body>
-<aside>
-  <h1>📦 CUBE Managers</h1><small>5 AI agents · one evidence chain</small>
-  <a data-p="dashboard">📊 Dashboard</a><div class="sep"></div>
-  <a data-p="receiving">1 · Receiving</a><a data-p="prep">2 · Prep</a><a data-p="pack">3 · Pack</a>
-  <a data-p="returns">4 · Returns</a><a data-p="recovery">5 · Recovery</a><div class="sep"></div>
-  <a data-p="pipeline">🔗 Full pipeline</a><a data-p="samples">🗂 Sample runs</a><a data-p="settings">⚙️ Groq settings</a>
-  <div class="groq" id="groqbox">…</div>
+
+<!-- Mobile Header Bar -->
+<div class="mobile-topbar">
+  <a class="mobile-brand" href="#overview">
+    <b>CUBE</b><span>pod13</span>
+  </a>
+  <button class="btn-mobile-menu" id="mobile-menu-btn" aria-label="Toggle navigation">☰</button>
+</div>
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+<!-- Collapsible Enterprise Sidebar -->
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-brand-box" href="#overview">
+      <div class="sidebar-logo">
+        <b>CUBE</b><span>pod13</span>
+      </div>
+      <div class="sidebar-subtext">Enterprise AI Operations</div>
+    </a>
+    <button class="btn-sidebar-collapse" id="sidebar-collapse-btn" title="Toggle sidebar">◀</button>
+  </div>
+
+  <div class="sidebar-nav-container" id="sidebar-nav">
+    <!-- Populated dynamically by shell() in pages.js with logical groups -->
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="groq-status-card" id="groqbox">…</div>
+  </div>
 </aside>
+
+<!-- Main Workspace -->
 <main id="main"></main>
-<script src="/static/vendor/chart.umd.js"></script><script src="/static/app.js"></script><script src="/static/pages.js"></script>
-</body></html>
+
+<script src="./vendor/chart.umd.js"></script>
+<script src="./vendor/motion.js"></script>
+<script src="./app.js"></script>
+<script src="./pages.js"></script>
+</body>
+</html>

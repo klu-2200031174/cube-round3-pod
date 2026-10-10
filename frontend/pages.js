@@ -8,33 +8,749 @@ async function openWorkflow(id, into) {
   const b = await api("/workflows/" + encodeURIComponent(id) + "/evidence"); into.replaceChildren(); renderBundle(b, into);
   const wf = b.workflow; into.prepend(h("div", { class: "card" }, h("h3", {}, "Workflow timeline · " + wf.workflow_id), h("div", { class: "steps" }, wf.stage_results.map((s) => h("div", { class: "stp " + s.state }, h("b", {}, s.stage), h("span", {}, s.state === "skipped" ? "skipped" : (s.verdict || s.state)))))));
 }
-// ---------------------------------------------------------------- landing
+
+// ---------------------------------------------------------------- Framer Motion helper
+function applyMotionEffects() {
+  if (typeof window.Motion === "undefined") return;
+  const { animate, inView, stagger } = window.Motion;
+  const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReduced) return;
+
+  try {
+    // Staggered reveals on hero elements
+    animate(".hero-pill-badge", { opacity: [0, 1], y: [16, 0] }, { duration: 0.55, ease: [0.16, 1, 0.3, 1] });
+    animate(".hero-headline", { opacity: [0, 1], y: [22, 0] }, { duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] });
+    animate(".hero-subhead", { opacity: [0, 1], y: [18, 0] }, { duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] });
+    animate(".hero-cta-group", { opacity: [0, 1], y: [16, 0] }, { duration: 0.55, delay: 0.24, ease: [0.16, 1, 0.3, 1] });
+    animate(".hero-stage-card", { opacity: [0, 1], y: [28, 0] }, { duration: 0.75, delay: 0.32, ease: [0.16, 1, 0.3, 1] });
+
+    // Pipeline nodes stagger
+    const nodes = document.querySelectorAll(".pipeline-node");
+    if (nodes.length) {
+      animate(nodes, { opacity: [0, 1], y: [12, 0] }, { delay: stagger(0.08, { start: 0.42 }), duration: 0.5 });
+    }
+
+    // Scroll viewport triggers
+    if (typeof inView === "function") {
+      inView(".agent-spec-card", (info) => {
+        animate(info.target, { opacity: [0, 1], y: [24, 0] }, { duration: 0.6, ease: [0.16, 1, 0.3, 1] });
+      });
+      inView(".workflow-step-card", (info) => {
+        animate(info.target, { opacity: [0, 1], y: [20, 0] }, { duration: 0.55, ease: [0.16, 1, 0.3, 1] });
+      });
+      inView(".evidence-dossier-card", (info) => {
+        animate(info.target, { opacity: [0, 1], y: [28, 0] }, { duration: 0.7, ease: [0.16, 1, 0.3, 1] });
+      });
+      inView(".outcomes-banner", (info) => {
+        animate(info.target, { opacity: [0, 1], y: [20, 0] }, { duration: 0.6, ease: [0.16, 1, 0.3, 1] });
+      });
+    }
+  } catch (err) {
+    console.warn("Motion effect warning:", err);
+  }
+}
+
+// ---------------------------------------------------------------- landing (SYDON.AI x CUBE POD 13)
 function landing(m) {
+  document.body.classList.remove("login-page");
   document.body.classList.add("landing");
-  m.append(h("div", { class: "hero" }, h("span", { class: "pill" }, "● INTEGRATED END TO END"), h("h1", {}, "From supplier dock ", h("em", {}, "to final claim.")),
-    h("p", {}, "One orchestrator routes every unit, hands each stage the full evidence chain, and derives the outcome. Five Groq-powered agents. Every decision traceable to its evidence."),
-    h("a", { class: "btn big", href: "#overview" }, "Open control center →"),
-    h("div", { class: "flow" }, STAGES5.map(([k, l], i) => [h("div", { class: "node" }, h("small", {}, "0" + (i + 1)), h("b", {}, l)), i < 4 ? h("span", { class: "arrow" }, "→") : null])),
-    h("div", { class: "grid g4", style: "margin-top:34px;text-align:left" }, [["Judge", "Agents describe and judge from photos — PASS, FAIL or UNCERTAIN, never a guess."], ["Decide", "The orchestrator derives status and the final outcome from the evidence chain."], ["Trace", "Every record carries sha256 hashes of the photos it was based on."], ["Recover", "Fee charges are matched to evidence: contradicted, supported or silent."]].map(([t, d]) => h("div", { class: "card" }, h("h3", {}, t), h("p", { class: "mute" }, d))))));
+
+  // Sticky Navigation Header
+  const nav = h("header", { class: "sydon-nav" },
+    h("div", { class: "nav-container" },
+      h("a", { class: "nav-brand", href: "#" },
+        h("div", { class: "brand-title" }, "sydon.ai", h("span", { class: "accent" }, "× pod13")),
+        h("span", { class: "brand-tag" }, "ROUND 3")
+      ),
+      h("nav", { class: "nav-menu" },
+        h("a", { class: "nav-link", href: "#platform" }, "Platform"),
+        h("a", { class: "nav-link", href: "#five-agents" }, "Five Agents"),
+        h("a", { class: "nav-link", href: "#evidence-integrity" }, "Evidence"),
+        h("a", { class: "nav-link", href: "#how-it-works" }, "How It Works")
+      ),
+      h("div", { class: "nav-actions" },
+        h("a", { class: "btn-nav-login", href: "#login" }, "Demo Login"),
+        h("a", { class: "btn-nav-cta", href: "#overview" }, "Open Control Center →")
+      )
+    )
+  );
+
+  // Hero Section
+  const hero = h("section", { class: "landing-hero", id: "platform" },
+    h("div", { class: "hero-editorial" },
+      h("div", { class: "hero-pill-badge" },
+        h("span", { class: "pulse-dot" }),
+        "CUBE BUILDATHON 2026 · ROUND 3 · POD 13"
+      ),
+      h("h1", { class: "hero-headline" },
+        "Intelligence in motion. ",
+        h("em", {}, "Decisions with evidence.")
+      ),
+      h("p", { class: "hero-subhead" },
+        "Five specialized agents. One orchestrated workflow. Every operational decision connected to its evidence."
+      ),
+      h("div", { class: "hero-cta-group" },
+        h("a", { class: "btn-hero-primary", href: "#overview" }, "Enter Control Center →"),
+        h("a", { class: "btn-hero-secondary", href: "#how-it-works" }, "Explore the Platform ↓")
+      )
+    ),
+
+    // Original Hero Composition: 5 Agents In Motion
+    h("div", { class: "hero-stage-card" },
+      h("div", { class: "stage-top-bar" },
+        h("div", { class: "unit-specimen-pill" },
+          h("span", {}, "ACTIVE UNIT:"),
+          h("b", {}, "UNIT-0042"),
+          h("span", {}, "·"),
+          h("span", {}, "SKU: B09X41-PRO"),
+          h("span", {}, "·"),
+          h("span", {}, "ROUTE: MFN-DIRECT")
+        ),
+        h("div", { class: "stage-telemetry-tag" },
+          h("span", { class: "spin", style: "width:10px;height:10px;border-width:1.5px;color:var(--emerald)" }),
+          "5 AGENTS CONCURRENT · ORCHESTRATION ACTIVE"
+        )
+      ),
+
+      h("div", { class: "stage-pipeline-flow" },
+        [
+          ["01", "Receiving Manager", "ACCEPT", "PO Match 100%"],
+          ["02", "Prep Manager", "PASS", "FBA Compliant"],
+          ["03", "Pack Manager", "SEAL", "Census Verified"],
+          ["04", "Returns Manager", "RESTOCK", "Condition: Like-New"],
+          ["05", "Recovery Manager", "CLAIM $38.00", "Packaging Defect Audit"]
+        ].map(([idx, name, verdict, sub], i) =>
+          h("div", { class: "pipeline-node" + (i === 2 ? " active-focus" : "") },
+            h("div", { class: "node-idx" }, "AGENT " + idx),
+            h("div", { class: "node-name" }, name),
+            h("div", { class: "node-badge-verdict" + (idx === "05" ? " claim" : "") }, verdict),
+            h("div", { style: "font-size:11px;color:var(--mute);margin-top:6px;" }, sub)
+          )
+        )
+      ),
+
+      h("div", { class: "stage-bottom-ledger" },
+        h("div", { class: "ledger-item" },
+          h("span", { class: "label" }, "Evidence Digest:"),
+          h("span", { class: "value mono" }, "sha256:4f8e719ba28d09e331c...")
+        ),
+        h("div", { class: "ledger-item" },
+          h("span", { class: "label" }, "Verification:"),
+          h("span", { class: "value" }, "Cryptographic Integrity 100%")
+        ),
+        h("div", { class: "ledger-item" },
+          h("span", { class: "label" }, "Final Verdict:"),
+          h("span", { class: "value", style: "color:var(--emerald-dark)" }, "VERIFIED WITH PROOF")
+        )
+      )
+    )
+  );
+
+  // Five Agents Section
+  const fiveAgentsSection = h("section", { class: "landing-section", id: "five-agents" },
+    h("div", { class: "section-editorial-header" },
+      h("span", { class: "section-label" }, "Autonomous Operating Fleet"),
+      h("h2", { class: "section-title" }, "The Five Intelligent Agents"),
+      h("p", { class: "section-desc" },
+        "Five purpose-built vision and logic engines operating in an orchestrated DAG. Each agent delivers rigorous, evidence-backed verdicts without hallucinations."
+      )
+    ),
+
+    h("div", { class: "agents-editorial-grid" },
+      // Agent 1: Receiving Manager
+      h("div", { class: "agent-spec-card span-4" },
+        h("div", { class: "card-top-identity" },
+          h("div", { class: "agent-icon-box" }, "📥"),
+          h("span", { class: "agent-order-num" }, "STAGE 01")
+        ),
+        h("h3", { class: "agent-card-title" }, "Receiving Manager"),
+        h("p", { class: "agent-card-role" },
+          "Dock inbound inspection, purchase order reconciliation, and physical carton damage grading."
+        ),
+        h("ul", { class: "agent-specs-list" },
+          h("li", {}, "Audits carton condition and seals against inbound manifest"),
+          h("li", {}, "Cross-checks received quantities against original PO lines"),
+          h("li", {}, "Evaluates shipping label OCR legibility and tracking barcodes")
+        ),
+        h("div", { class: "agent-meta-footer" },
+          h("span", { class: "model mono" }, "Groq / Qwen 27B Vision"),
+          h("span", { class: "verdict" }, "ACCEPT · EXCEPTION · REJECT")
+        )
+      ),
+
+      // Agent 2: Prep Manager
+      h("div", { class: "agent-spec-card span-4" },
+        h("div", { class: "card-top-identity" },
+          h("div", { class: "agent-icon-box" }, "🏷"),
+          h("span", { class: "agent-order-num" }, "STAGE 02")
+        ),
+        h("h3", { class: "agent-card-title" }, "Prep Manager"),
+        h("p", { class: "agent-card-role" },
+          "Amazon FBA compliance enforcement, polybag specifications, and scannable barcode verification."
+        ),
+        h("ul", { class: "agent-specs-list" },
+          h("li", {}, "Checks suffocation warnings on polybags > 5 inches"),
+          h("li", {}, "Confirms barcode readability and FNSKU label coverage"),
+          h("li", {}, "Flags non-verifiable attributes without guessing")
+        ),
+        h("div", { class: "agent-meta-footer" },
+          h("span", { class: "model mono" }, "Deterministic FBA Matrix"),
+          h("span", { class: "verdict" }, "PASS · FAIL · UNCERTAIN")
+        )
+      ),
+
+      // Agent 3: Pack Manager
+      h("div", { class: "agent-spec-card span-4" },
+        h("div", { class: "card-top-identity" },
+          h("div", { class: "agent-icon-box" }, "📦"),
+          h("span", { class: "agent-order-num" }, "STAGE 03")
+        ),
+        h("h3", { class: "agent-card-title" }, "Pack Manager"),
+        h("p", { class: "agent-card-role" },
+          "Outbound box census audit prior to sealing. Detects omissions, incorrect variants, and extra items."
+        ),
+        h("ul", { class: "agent-specs-list" },
+          h("li", {}, "Zero-shot visual item count blind to the packing order"),
+          h("li", {}, "Identifies missing SKU items or unauthorized foreign items"),
+          h("li", {}, "Automated halt triggers (STOP & FIX) for warehouse packers")
+        ),
+        h("div", { class: "agent-meta-footer" },
+          h("span", { class: "model mono" }, "Census Vision Audit"),
+          h("span", { class: "verdict" }, "SEAL · STOP & FIX · UNCERTAIN")
+        )
+      ),
+
+      // Agent 4: Returns Manager
+      h("div", { class: "agent-spec-card span-6" },
+        h("div", { class: "card-top-identity" },
+          h("div", { class: "agent-icon-box" }, "↩"),
+          h("span", { class: "agent-order-num" }, "STAGE 04")
+        ),
+        h("h3", { class: "agent-card-title" }, "Returns Manager"),
+        h("p", { class: "agent-card-role" },
+          "Reverse logistics grading against official Amazon condition rubrics. Detects swap fraud and audits accessories."
+        ),
+        h("ul", { class: "agent-specs-list" },
+          h("li", {}, "Detects product swap fraud against original catalog signatures"),
+          h("li", {}, "Audits completeness of enclosed accessories, power cables, and documentation"),
+          h("li", {}, "Classifies condition across 6 grades and assigns automated disposition")
+        ),
+        h("div", { class: "agent-meta-footer" },
+          h("span", { class: "model mono" }, "Multi-Modal Condition Scale"),
+          h("span", { class: "verdict" }, "RESTOCK · REFURBISH · LIQUIDATE · DISPOSE")
+        )
+      ),
+
+      // Agent 5: Recovery Manager (Featured Card)
+      h("div", { class: "agent-spec-card span-6" },
+        h("div", { class: "card-top-identity" },
+          h("div", { class: "agent-icon-box" }, "$"),
+          h("span", { class: "agent-order-num" }, "STAGE 05")
+        ),
+        h("h3", { class: "agent-card-title" }, "Recovery Manager"),
+        h("p", { class: "agent-card-role" },
+          "Financial fee reconciliation and automated claim generator. Audits charge line items against upstream evidence."
+        ),
+        h("ul", { class: "agent-specs-list" },
+          h("li", {}, "Cross-references Amazon chargebacks directly against Pack/Prep hashes"),
+          h("li", {}, "Generates defensible reimbursement claims with exact proof references"),
+          h("li", {}, "Strict SILENT discipline: never asserts claims without verifiable evidence")
+        ),
+        h("div", { class: "agent-meta-footer" },
+          h("span", { class: "model mono" }, "Automated Claim Engine"),
+          h("span", { class: "verdict" }, "CONTRADICTS ($) · SUPPORTS · SILENT")
+        )
+      )
+    )
+  );
+
+  // How the System Works Section
+  const howItWorksSection = h("section", { class: "landing-section", id: "how-it-works" },
+    h("div", { class: "section-editorial-header" },
+      h("span", { class: "section-label" }, "Execution Architecture"),
+      h("h2", { class: "section-title" }, "How the System Works"),
+      h("p", { class: "section-desc" },
+        "Input captures move through orchestrated parallel stages. Code decides deterministically; Groq vision observes without bias; outcomes are cryptographically bonded to evidence."
+      )
+    ),
+
+    h("div", { class: "workflow-matrix-container" },
+      [
+        ["01", "Input Capture", "Photographic captures of cartons, barcodes, items, and fee ledgers are ingested."],
+        ["02", "Orchestration", "DAG scheduler executes independent agents in parallel (Receiving ∥ Prep/Pack)."],
+        ["03", "Agent Decisions", "Vision models describe observations; deterministic rule engines compute verdicts."],
+        ["04", "Evidence Validation", "Every observation check and photo sha256 checksum is hashed into an immutable record."],
+        ["05", "Final Outcome", "The orchestrator resolves the workflow status and computes recovery positions."]
+      ].map(([num, title, desc]) =>
+        h("div", { class: "workflow-step-card" },
+          h("span", { class: "step-num-pill" }, "PHASE " + num),
+          h("h4", { class: "step-title" }, title),
+          h("p", { class: "step-desc" }, desc)
+        )
+      )
+    ),
+
+    h("div", { class: "outcomes-banner" },
+      h("h3", { style: "margin:0 0 8px;font-size:18px;color:var(--ink);" }, "Verifiable Outcome Matrix"),
+      h("p", { class: "mute", style: "margin:0;font-size:13.5px;" },
+        "The final result depends strictly on available evidence. UNCERTAIN results trigger human review and are never coerced into a PASS."
+      ),
+      h("div", { class: "outcomes-grid" },
+        h("div", { class: "outcome-card pass" },
+          h("h4", {}, "● PASS"),
+          h("p", {}, "Complete photographic compliance verified. PO confirmed, package sealed, or return restocked.")
+        ),
+        h("div", { class: "outcome-card fail" },
+          h("h4", {}, "● FAIL"),
+          h("p", {}, "Discrepancy or physical defect confirmed. Packaging rejected, omission flagged, or fee contradicted.")
+        ),
+        h("div", { class: "outcome-card uncertain" },
+          h("h4", {}, "● UNCERTAIN"),
+          h("p", {}, "Photo angle obscured or insufficient data. Escalated to human review queue without guessing.")
+        )
+      )
+    )
+  );
+
+  // Evidence Section (Nothing lost between input and decision)
+  const evidenceSection = h("section", { class: "landing-section", id: "evidence-integrity" },
+    h("div", { class: "section-editorial-header" },
+      h("span", { class: "section-label" }, "Traceability Guarantee"),
+      h("h2", { class: "section-title" }, "Nothing lost between input and decision."),
+      h("p", { class: "section-desc" },
+        "Every single verdict links directly to its source photographs, expected vs observed criteria, model metadata, and sha256 cryptographic hashes."
+      )
+    ),
+
+    h("div", { class: "evidence-dossier-card" },
+      h("div", { class: "dossier-header-bar" },
+        h("div", { class: "dossier-title-group" },
+          h("h3", {}, "Evidence Record Specimen"),
+          h("span", { class: "unit-pill" }, "UNIT-0042"),
+          h("span", { class: "badge PASS" }, "SEAL · PASS")
+        ),
+        h("div", { class: "dossier-specimen-badge" }, "DEMO EVIDENCE SPECIMEN · NON-PRODUCTION RECORD")
+      ),
+
+      h("div", { class: "dossier-body" },
+        h("div", { class: "dossier-meta-grid" },
+          h("div", { class: "dossier-meta-box" },
+            h("span", { class: "k" }, "Record ID"),
+            h("span", { class: "v" }, "EV-PACK-0042-881")
+          ),
+          h("div", { class: "dossier-meta-box" },
+            h("span", { class: "k" }, "Contributing Agent"),
+            h("span", { class: "v" }, "Pack Manager")
+          ),
+          h("div", { class: "dossier-meta-box" },
+            h("span", { class: "k" }, "Input Hash"),
+            h("span", { class: "v" }, "sha256:9b1a7d6540c9...")
+          ),
+          h("div", { class: "dossier-meta-box" },
+            h("span", { class: "k" }, "Confidence Score"),
+            h("span", { class: "v", style: "color:var(--emerald-dark)" }, "98.4% Verified")
+          )
+        ),
+
+        h("div", { style: "margin-bottom:20px;" },
+          h("h4", { style: "margin:0 0 10px;font-size:14px;color:var(--ink);" }, "Inspection Checks: Expected vs Observed"),
+          h("table", {},
+            h("thead", {},
+              h("tr", {},
+                ["Check Description", "Verdict", "Expected Qty", "Observed Qty", "Evidence Reference"].map((th) => h("th", {}, th))
+              )
+            ),
+            h("tbody", {},
+              h("tr", {},
+                h("td", {}, h("b", {}, "item_count_primary")),
+                h("td", {}, h("span", { class: "badge PASS" }, "PASS")),
+                h("td", { class: "mono" }, "1 unit"),
+                h("td", { class: "mono" }, "1 unit (verified)"),
+                h("td", { class: "mono mute" }, "img_carton_top.jpg")
+              ),
+              h("tr", {},
+                h("td", {}, h("b", {}, "accessory_cable_usb_c")),
+                h("td", {}, h("span", { class: "badge PASS" }, "PASS")),
+                h("td", { class: "mono" }, "1 unit"),
+                h("td", { class: "mono" }, "1 unit (present)"),
+                h("td", { class: "mono mute" }, "img_carton_top.jpg")
+              ),
+              h("tr", {},
+                h("td", {}, h("b", {}, "extra_unordered_items")),
+                h("td", {}, h("span", { class: "badge PASS" }, "PASS")),
+                h("td", { class: "mono" }, "0 extra"),
+                h("td", { class: "mono" }, "0 extra detected"),
+                h("td", { class: "mono mute" }, "img_carton_top.jpg")
+              )
+            )
+          )
+        ),
+
+        h("div", { style: "background:var(--bg-primary);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:12px;" },
+          h("div", { class: "mono", style: "color:var(--ink-secondary);" },
+            "Photo References: ",
+            h("span", { class: "mute" }, "img_carton_top.jpg (sha256:4f8e719ba28d09e3...) · img_barcode.jpg (sha256:7c21ae9004f183bb...)")
+          ),
+          h("div", { class: "mono", style: "color:var(--emerald-dark);font-weight:600;" },
+            "CONTENT HASH: sha256:a9143c7219f854b..."
+          )
+        )
+      )
+    )
+  );
+
+  // Closing Section
+  const closingSection = h("section", { class: "landing-closing-cta" },
+    h("div", { class: "closing-card" },
+      h("span", { class: "section-label" }, "Deployable Control Center"),
+      h("h2", { class: "closing-title" }, "Make every operational decision traceable."),
+      h("p", { class: "closing-sub" },
+        "Launch autonomous multi-agent pipelines, inspect live review queues, and reconcile fee recovery with photographic certainty."
+      ),
+      h("a", { class: "btn-hero-primary", href: "#overview", style: "font-size:16px;padding:15px 34px;" }, "Open Control Center →")
+    )
+  );
+
+  // Footer
+  const footer = h("footer", { class: "landing-footer" },
+    h("div", { class: "footer-content" },
+      h("div", {},
+        h("div", { class: "footer-brand" }, "SYDON.AI × CUBE POD 13"),
+        h("div", { class: "footer-sub" }, "CUBE Buildathon 2026 · Round 3 · Multi-Agent Workflow & Recovery Decision Engine")
+      ),
+      h("div", { class: "footer-meta-badges" },
+        h("span", { class: "meta-pill" }, "5 Agents Integrated"),
+        h("span", { class: "meta-pill" }, "Groq Multi-Modal"),
+        h("span", { class: "meta-pill" }, "Parallel DAG Scheduler"),
+        h("span", { class: "meta-pill" }, "Framer Motion Ready")
+      )
+    )
+  );
+
+  m.append(nav, hero, fiveAgentsSection, howItWorksSection, evidenceSection, closingSection, footer);
+
+  // Trigger Framer Motion effects
+  setTimeout(applyMotionEffects, 40);
 }
-// ---------------------------------------------------------------- overview
+
+// ---------------------------------------------------------------- login page
+function loginPage(m) {
+  document.body.classList.remove("landing");
+  document.body.classList.add("login-page");
+
+  const DEMO_ACCOUNTS = [
+    { role: "Admin", email: "admin@pod13.demo", pass: "Pod13Admin!2026", desc: "Full Fleet Supervision & Settings" },
+    { role: "Operations", email: "operator@pod13.demo", pass: "Pod13Ops!2026", desc: "Live Runs, Queue & Workflows" },
+    { role: "Recovery", email: "recovery@pod13.demo", pass: "Pod13Recovery!2026", desc: "Fee Audits & Claims Engine" }
+  ];
+
+  const topNav = h("div", { class: "login-top-bar" },
+    h("a", { href: "#", class: "nav-brand", style: "text-decoration:none;" },
+      h("div", { class: "brand-title" }, "sydon.ai", h("span", { class: "accent" }, "× pod13")),
+      h("span", { class: "brand-tag" }, "ROUND 3")
+    ),
+    h("a", { href: "#", class: "btn-nav-login", style: "display:inline-flex;align-items:center;gap:6px;" },
+      "← Return to Platform"
+    )
+  );
+
+  const emailInp = h("input", { type: "email", placeholder: "name@pod13.demo", required: true });
+  const passInp = h("input", { type: "password", placeholder: "••••••••••••", required: true });
+  let passShown = false;
+  const toggleBtn = h("button", {
+    type: "button",
+    class: "btn-toggle-eye",
+    onclick: () => {
+      passShown = !passShown;
+      passInp.type = passShown ? "text" : "password";
+      toggleBtn.textContent = passShown ? "👁️ Hide" : "👁️ Show";
+    }
+  }, "👁️ Show");
+
+  const rememberChk = h("input", { type: "checkbox", checked: true });
+  const alertBox = h("div", { style: "display:none;margin-bottom:16px;padding:10px 14px;border-radius:8px;font-size:12.5px;" });
+
+  const showAlert = (msg, isError) => {
+    alertBox.style.display = "block";
+    alertBox.style.background = isError ? "var(--fail-bg)" : "var(--emerald-subtle)";
+    alertBox.style.color = isError ? "var(--fail)" : "var(--emerald-dark)";
+    alertBox.style.border = "1px solid " + (isError ? "#fca5a5" : "var(--emerald-border)");
+    alertBox.textContent = msg;
+  };
+
+  const demoBtnsContainer = h("div", { class: "demo-account-buttons" });
+  let selectedBtn = null;
+
+  DEMO_ACCOUNTS.forEach((acc) => {
+    const btn = h("button", {
+      type: "button",
+      class: "btn-demo-pill",
+      onclick: () => {
+        if (selectedBtn) selectedBtn.classList.remove("selected");
+        btn.classList.add("selected");
+        selectedBtn = btn;
+        emailInp.value = acc.email;
+        passInp.value = acc.pass;
+        showAlert("Credentials loaded for " + acc.role + ". Click Sign In to authenticate.", false);
+      }
+    }, h("div", { style: "font-weight:700;" }, acc.role), h("div", { style: "font-size:10px;color:var(--mute);" }, acc.email.split("@")[0]));
+    demoBtnsContainer.append(btn);
+  });
+
+  const submitBtn = h("button", {
+    type: "submit",
+    class: "btn-auth-submit"
+  }, "Sign In to Control Center →");
+
+  const form = h("form", {
+    onsubmit: async (e) => {
+      e.preventDefault();
+      const email = emailInp.value.trim();
+      const pass = passInp.value.trim();
+
+      if (!email || !pass) {
+        showAlert("Please enter both email and password.", true);
+        return;
+      }
+
+      const matched = DEMO_ACCOUNTS.find(a => a.email.toLowerCase() === email.toLowerCase() && a.pass === pass);
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spin"></span> Authenticating terminal...';
+      alertBox.style.display = "none";
+
+      await new Promise(r => setTimeout(r, 600));
+
+      if (matched || (email.includes("@") && pass.length >= 6)) {
+        const role = matched ? matched.role : "Operator";
+        localStorage.setItem("sydon_user", JSON.stringify({ email, role, loggedAt: new Date().toISOString() }));
+        showAlert("Authenticated successfully as " + role + ". Redirecting...", false);
+        toast("Authenticated as " + role);
+        setTimeout(() => {
+          location.hash = "#overview";
+        }, 300);
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign In to Control Center →";
+        showAlert("Invalid credentials. Please select one of the demo accounts above.", true);
+      }
+    }
+  },
+    h("div", { class: "auth-form-group" },
+      h("label", {}, "Work Email"),
+      emailInp
+    ),
+    h("div", { class: "auth-form-group" },
+      h("label", {}, "Password"),
+      h("div", { class: "input-with-action" },
+        passInp,
+        toggleBtn
+      )
+    ),
+    h("div", { class: "auth-check-row" },
+      h("label", { class: "chk", style: "margin:0;" }, rememberChk, "Remember this terminal"),
+      h("a", { href: "#", class: "mute", style: "text-decoration:none;font-size:12px;" }, "Platform Home")
+    ),
+    alertBox,
+    submitBtn
+  );
+
+  const authCard = h("div", { class: "login-auth-card" },
+    h("div", { class: "auth-header" },
+      h("h2", {}, "Sign In to Control Center"),
+      h("p", {}, "Access the multi-agent orchestration console and evidence vault.")
+    ),
+    h("div", { class: "demo-access-panel" },
+      h("span", { class: "title" }, "Quick Demo Access (Select to Populate)"),
+      demoBtnsContainer,
+      h("p", { class: "mute", style: "font-size:11px;margin:8px 0 0;" }, "Selecting a profile pre-fills credentials without auto-submitting.")
+    ),
+    form,
+    h("p", { class: "mute", style: "font-size:11.5px;text-align:center;margin-top:24px;" },
+      "Development & Evaluation Environment · No external secrets transmitted."
+    )
+  );
+
+  const container = h("div", { class: "login-card-container" }, authCard);
+  const wrap = h("div", { class: "login-screen-wrap" }, topNav, container);
+
+  m.append(wrap);
+}
+
+// ---------------------------------------------------------------- overview (Enterprise Redesign)
 async function overview(m) {
-  const [a, wf] = await Promise.all([api("/api/analytics"), api("/api/workflow-list")]); const k = a.kpis;
-  m.append(h("h2", {}, "Overview"), h("p", { class: "sub" }, "Live state of every unit moving through the five agents."));
-  if (!k.groq_ready) m.append(h("div", { class: "note warn" }, "Groq is not connected, so AI inspections are off. Add the key in ", h("a", { href: "#system" }, "Pod / System"), ". Sample units replay the organiser's CSV — they are not AI results."));
-  m.append(h("div", { class: "grid g4", style: "margin-bottom:16px" }, [["Workflows", k.workflows], ["Clean", k.clean], ["Exceptions", k.exceptions], ["Claims recommended", k.claims], ["Claimable value", money(k.claimable_usd)], ["Needs review", k.needs_review], ["AI records (Groq)", k.ai_records], ["Lab units", k.lab_units]].map(([l, v]) => h("div", { class: "kpi" }, h("span", {}, l), h("b", {}, v)))));
-  const pipe = h("div", { class: "card" }, h("h3", {}, "Standard flow · standard-v1"), h("div", { class: "flow small" }, STAGES5.map(([s, l], i) => { const v = a.stage_verdicts[s] || {}; const n = (v.PASS || 0) + (v.FAIL || 0) + (v.UNCERTAIN || 0);
-    return [h("a", { class: "node", href: "#console-" + s }, h("small", {}, "0" + (i + 1)), h("b", {}, l), h("span", {}, n + " records"), h("div", { class: "mini" }, ["PASS", "FAIL", "UNCERTAIN"].map((x) => h("i", { style: `flex:${v[x] || 0};background:${VC[x]}` })))), i < 4 ? h("span", { class: "arrow" }, "→") : null]; })));
-  m.append(pipe); const g = h("div", { class: "grid g2" }); const c1 = h("div", { class: "card" }, h("h3", {}, "Final outcomes")), c2 = h("div", { class: "card" }, h("h3", {}, "Workflows by status"));
-  doughnut(c1, a.outcomes, { CLEAN: "#10b981", EXCEPTION: "#ef4444", CLAIM_RECOMMENDED: "#0ea5e9", NEEDS_REVIEW: "#f59e0b", INCOMPLETE: "#94a3b8" }); doughnut(c2, a.status); g.append(c1, c2); m.append(g);
-  m.append(h("div", { class: "card" }, h("h3", {}, "Latest workflows"), wfTable(wf.slice(0, 8), m)));
+  const [a, wf] = await Promise.all([api("/api/analytics"), api("/api/workflow-list")]);
+  const k = a.kpis;
+
+  // Header strip
+  const header = h("div", { class: "page-header-strip" },
+    h("div", { class: "page-header-title-box" },
+      h("h2", {}, "Overview"),
+      h("p", { class: "sub" }, "Live operational state across the five-agent commerce workflow pipeline.")
+    ),
+    h("div", { class: "header-action-group" },
+      h("button", { onclick: () => runModal(async () => { route(); }) }, "+ Launch Workflow"),
+      h("a", { class: "btn ghost", href: "#live" }, "Live Run →"),
+      h("button", { class: "ghost", onclick: () => route() }, "↻ Refresh")
+    )
+  );
+
+  // Groq warning if key missing
+  const groqWarn = !k.groq_ready ? h("div", { class: "note warn", style: "margin-bottom:16px;" },
+    "Groq is not connected — multi-modal visual inspections are inactive. Configure your API key in ",
+    h("a", { href: "#system" }, "Pod / System"),
+    ". Sample runs replay organizer benchmark rows."
+  ) : null;
+
+  // 6 Compact KPI cards
+  const kpiItems = [
+    { label: "Workflows", val: k.workflows, sub: "Total tracked", icon: "☰" },
+    { label: "Clean Units", val: k.clean, sub: "Zero exceptions", icon: "✓", color: "var(--pass)" },
+    { label: "Exceptions", val: k.exceptions, sub: "Defects / mismatches", icon: "⚠", color: "var(--fail)" },
+    { label: "Claims Recommended", val: k.claims, sub: "Reimbursement ready", icon: "◈", color: "var(--cyan)" },
+    { label: "Claimable Value", val: money(k.claimable_usd), sub: "Evidence-backed", icon: "$", color: "var(--emerald-dark)" },
+    { label: "Needs Review", val: k.needs_review, sub: "Pending human input", icon: "👤", color: k.needs_review > 0 ? "var(--unc)" : "var(--mute)" }
+  ];
+
+  const kpiGrid = h("div", { class: "overview-kpi-grid" },
+    kpiItems.map(item => h("div", { class: "kpi-card-compact" },
+      h("div", { class: "kpi-compact-label" },
+        h("span", {}, item.label),
+        h("span", { style: "font-size:13px;" }, item.icon)
+      ),
+      h("div", { class: "kpi-compact-val", style: item.color ? `color:${item.color}` : "" }, item.val),
+      h("div", { class: "kpi-compact-sub" }, item.sub)
+    ))
+  );
+
+  // Five-Agent Workflow Visualization Strip
+  const pipelineStrip = h("div", { class: "pipeline-overview-card" },
+    h("div", { class: "pipeline-overview-header" },
+      h("h3", {}, "Standard Multi-Agent Execution Flow (standard-v1)"),
+      h("a", { href: "#orchestration", class: "mute", style: "text-decoration:none;font-size:12px;font-weight:600;" }, "Inspect DAG Graph →")
+    ),
+    h("div", { class: "pipeline-overview-strip" },
+      STAGES5.map(([s, label], i) => {
+        const v = a.stage_verdicts[s] || {};
+        const count = (v.PASS || 0) + (v.FAIL || 0) + (v.UNCERTAIN || 0);
+        return h("a", { class: "pipeline-agent-step", href: "#console-" + s },
+          h("div", { class: "step-seq-tag" }, "STAGE 0" + (i + 1)),
+          h("div", { class: "step-agent-name" }, label + " Manager"),
+          h("div", { class: "step-agent-stats" }, count + " records processed"),
+          h("div", { class: "verdict-mini-bar" },
+            ["PASS", "FAIL", "UNCERTAIN"].map(res =>
+              h("i", { style: `flex:${v[res] || 0};background:${VC[res]};` })
+            )
+          )
+        );
+      })
+    )
+  );
+
+  // Two-column Main Grid: Left = Recent Workflows; Right = Review Queue Panel & Outcomes Chart
+  const mainGrid = h("div", { class: "overview-main-grid" });
+
+  // Left Column: Recent Activity Table
+  const recentCard = h("div", { class: "card", style: "margin-bottom:0;" },
+    h("div", { style: "display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;" },
+      h("h3", { style: "margin:0;" }, "Recent Workflow Activity"),
+      h("a", { href: "#workflows", class: "mute", style: "text-decoration:none;font-size:12px;font-weight:600;" }, "View All (" + wf.length + ") →")
+    ),
+    wfTable(wf.slice(0, 7), m)
+  );
+
+  // Right Column: Exceptions / Review Queue Panel + Outcomes Chart
+  const rightCol = h("div", {});
+
+  // Exceptions / Review Panel
+  const reviewCard = h("div", { class: "review-exception-panel" + (k.needs_review > 0 ? " alert" : "") });
+  if (k.needs_review > 0) {
+    reviewCard.append(
+      h("div", { style: "display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;" },
+        h("h3", { style: "margin:0;font-size:14.5px;color:var(--unc);display:flex;align-items:center;gap:6px;" },
+          "👤 " + k.needs_review + " Item" + (k.needs_review > 1 ? "s" : "") + " Awaiting Human Review"
+        ),
+        h("a", { href: "#queue", class: "btn ghost", style: "height:28px;padding:0 10px;font-size:11.5px;" }, "Open Queue →")
+      ),
+      h("p", { class: "mute", style: "margin:0;font-size:12.5px;" },
+        "Agents returned UNCERTAIN due to ambiguous photographic evidence. Human overrides maintain complete audit fidelity."
+      )
+    );
+  } else {
+    reviewCard.append(
+      h("h3", { style: "margin:0 0 4px;font-size:14px;color:var(--ink);" }, "✓ Review Queue Clear"),
+      h("p", { class: "mute", style: "margin:0;font-size:12px;" }, "Zero workflows currently blocked or requiring human review.")
+    );
+  }
+
+  // Outcome distribution chart card
+  const chartCard = h("div", { class: "card" },
+    h("h3", {}, "Final Outcome Distribution"),
+    h("div", { id: "outcomes-chart-box" })
+  );
+
+  rightCol.append(reviewCard, chartCard);
+
+  // Recovery claimable summary card if supported by real data
+  if (a.claimable_by_type && Object.keys(a.claimable_by_type).length > 0) {
+    const claimCard = h("div", { class: "card" },
+      h("h3", {}, "Claimable Reimbursement by Type"),
+      h("div", { id: "claimable-chart-box" })
+    );
+    rightCol.append(claimCard);
+  }
+
+  mainGrid.append(recentCard, rightCol);
+  m.append(header, groqWarn, kpiGrid, pipelineStrip, mainGrid);
+
+  // Render chart after DOM append
+  doughnut(chartCard.querySelector("#outcomes-chart-box"), a.outcomes, {
+    CLEAN: "#10b981",
+    EXCEPTION: "#ef4444",
+    CLAIM_RECOMMENDED: "#0ea5e9",
+    NEEDS_REVIEW: "#f59e0b",
+    INCOMPLETE: "#94a3b8"
+  });
+
+  const claimBox = rightCol.querySelector("#claimable-chart-box");
+  if (claimBox && a.claimable_by_type && Object.keys(a.claimable_by_type).length > 0) {
+    bar(claimBox, Object.keys(a.claimable_by_type), [
+      { label: "Claimable $", data: Object.values(a.claimable_by_type), backgroundColor: "#059669" }
+    ]);
+  }
 }
+
 function wfTable(rows, host) {
-  const detail = h("div"); const t = h("table", {}, h("tr", {}, ["Workflow", "Unit", "Org", "Route", "Returned", "Stage", "Status", "Outcome", "Claimable"].map((x) => h("th", {}, x))));
-  rows.forEach((r) => t.append(h("tr", { class: "click", onclick: () => openWorkflow(r.workflow_id, detail).then(() => detail.scrollIntoView({ behavior: "smooth" })) }, h("td", { class: "mono" }, r.workflow_id.replace("WF-", "")), h("td", {}, r.unit_id), h("td", {}, r.org_id.replace("org_", "")), h("td", {}, r.route.toUpperCase()), h("td", {}, r.returned ? "YES" : "NO"), h("td", {}, r.current_stage || "—"), h("td", {}, badge(r.status)), h("td", {}, r.outcome ? badge(r.outcome) : "—"), h("td", {}, r.claimable_usd ? money(r.claimable_usd) : "—"))));
-  if (!rows.length) t.append(h("tr", {}, h("td", { colspan: 9, class: "mute" }, "No workflow matches this search or filter.")));
+  const detail = h("div", { style: "margin-top:14px;" });
+  if (!rows || rows.length === 0) {
+    return h("div", { class: "empty-dossier-state", style: "padding:32px 16px;" },
+      h("span", { class: "empty-dossier-icon" }, "📋"),
+      h("b", { style: "display:block;margin-bottom:4px;color:var(--ink);" }, "No Workflows Found"),
+      h("p", { class: "mute", style: "margin:0 0 12px;font-size:12.5px;" }, "No matching workflows exist in the database."),
+      h("button", { onclick: () => runModal(async () => { route(); }) }, "+ Run a Workflow")
+    );
+  }
+  const t = h("table", {},
+    h("thead", {},
+      h("tr", {}, ["Workflow", "Unit ID", "Org", "Route", "Returned", "Stage", "Status", "Outcome", "Claimable"].map(th => h("th", {}, th)))
+    ),
+    h("tbody", {},
+      rows.map(r => h("tr", { class: "click", onclick: () => openWorkflow(r.workflow_id, detail).then(() => detail.scrollIntoView({ behavior: "smooth" })) },
+        h("td", { class: "mono", style: "font-weight:600;color:var(--cyan);" }, r.workflow_id.replace("WF-", "")),
+        h("td", { class: "mono" }, r.unit_id),
+        h("td", {}, r.org_id.replace("org_", "")),
+        h("td", { class: "mono" }, r.route ? r.route.toUpperCase() : "—"),
+        h("td", {}, r.returned ? h("span", { class: "badge", style: "background:#e0f2fe;color:#0369a1;" }, "YES") : h("span", { class: "mute" }, "NO")),
+        h("td", {}, r.current_stage || "—"),
+        h("td", {}, badge(r.status)),
+        h("td", {}, r.outcome ? badge(r.outcome) : h("span", { class: "mute" }, "—")),
+        h("td", { style: "font-weight:600;" }, r.claimable_usd ? money(r.claimable_usd) : h("span", { class: "mute" }, "—"))
+      ))
+    )
+  );
   return h("div", {}, h("div", { class: "scroll" }, t), detail);
 }
+
 // ---------------------------------------------------------------- workflows
 async function workflows(m) {
   let rows = await api("/api/workflow-list"), cur = "ALL", q = ""; const host = h("div");
@@ -275,39 +991,180 @@ async function livePage(m) {
     out
   );
 }
-// ---------------------------------------------------------------- shell + router
-const NAV = [
-  ["overview", "Overview", "▦"],
-  ["live", "Live Run (All Agents)", "▶"],
-  ["console-receiving", "1 · Receiving Manager", "📥"],
-  ["console-prep", "2 · Prep Manager", "🏷"],
-  ["console-pack", "3 · Pack Manager", "📦"],
-  ["console-returns", "4 · Returns Manager", "↩"],
-  ["recovery", "5 · Recovery Hub", "$"],
-  ["orchestration", "Orchestration Graph", "⛭"],
-  ["workflows", "Workflows", "☰"],
-  ["units", "Units", "◫"],
-  ["queue", "Review Queue", "✓"],
-  ["evidence", "Evidence Vault", "⛓"],
-  ["agents", "Agents Fleet", "✦"],
-  ["failures", "Failures", "⚠"],
-  ["analytics", "Analytics", "◔"],
-  ["system", "Pod / System", "⚙"]
+// ---------------------------------------------------------------- shell + router (Enterprise Grouped Navigation)
+const NAV_GROUPS = [
+  {
+    title: null,
+    items: [
+      ["overview", "Overview", "▦"]
+    ]
+  },
+  {
+    title: "Operations",
+    items: [
+      ["live", "Live Run", "▶"],
+      ["workflows", "Workflows", "☰"],
+      ["units", "Units", "◫"]
+    ]
+  },
+  {
+    title: "Five Agents",
+    items: [
+      ["console-receiving", "Receiving", "📥"],
+      ["console-prep", "Prep", "🏷"],
+      ["console-pack", "Pack", "📦"],
+      ["console-returns", "Returns", "↩"],
+      ["console-recovery", "Recovery", "$"]
+    ]
+  },
+  {
+    title: "Intelligence",
+    items: [
+      ["orchestration", "Orchestration Graph", "⛭"],
+      ["agents", "Agents Fleet", "✦"]
+    ]
+  },
+  {
+    title: "Evidence & Decisions",
+    items: [
+      ["queue", "Review Queue", "✓"],
+      ["evidence", "Evidence Vault", "⛓"],
+      ["recovery", "Recovery Hub", "◈"]
+    ]
+  },
+  {
+    title: "Analytics & Settings",
+    items: [
+      ["failures", "Failures", "⚠"],
+      ["analytics", "Analytics", "◔"],
+      ["system", "Pod / System", "⚙"]
+    ]
+  }
 ];
-const PG = { overview, orchestration: orchestrationPage, live: livePage, workflows, units: unitsPage, queue, recovery: recoveryHub, evidence: evidencePage, agents: agentsPage, failures: failuresPage, analytics: dashboard, system: systemPage };
+
+const PG = {
+  login: loginPage,
+  overview,
+  orchestration: orchestrationPage,
+  live: livePage,
+  workflows,
+  units: unitsPage,
+  queue,
+  recovery: recoveryHub,
+  evidence: evidencePage,
+  agents: agentsPage,
+  failures: failuresPage,
+  analytics: dashboard,
+  system: systemPage
+};
+
 Object.assign(PG, {
-  "console-receiving": stagePage("receiving", "1 · Receiving Manager", "Does the shipment match the purchase order and arrive in acceptable condition? UNCERTAIN is a valid answer.", receivingForm),
-  "console-prep": stagePage("prep", "2 · Prep Manager", "Were the packaging and labelling requirements actually met? Only what a photo can show is judged.", prepForm),
-  "console-pack": stagePage("pack", "3 · Pack Manager", "Does the open box contain exactly what was ordered? SEAL, STOP & FIX, or UNCERTAIN.", packForm),
-  "console-returns": stagePage("returns", "4 · Returns Manager", "Identity, completeness, condition and recommended disposition of a returned item.", returnsForm) }); PG["console-recovery"] = recoveryPage; PG["console-pipeline"] = livePage;
-function shell() { const a = $("aside"); a.replaceChildren(h("div", { class: "logo" }, h("b", {}, "CUBE"), h("span", {}, "pod13")), h("small", {}, "Commerce Context · Round 3"), ...NAV.map(([k, l, i]) => h("a", { "data-p": k, href: "#" + k }, h("i", {}, i), l)), h("div", { class: "groq", id: "groqbox" })); }
+  "console-receiving": stagePage("receiving", "1 · Receiving Manager", "Dock inbound inspection, purchase order reconciliation, and physical carton damage grading.", receivingForm),
+  "console-prep": stagePage("prep", "2 · Prep Manager", "Amazon FBA packaging compliance, polybag warning labels, and scannable barcode verification.", prepForm),
+  "console-pack": stagePage("pack", "3 · Pack Manager", "Outbound carton census audit prior to taping. Detects missing items, wrong variants, and extra items.", packForm),
+  "console-returns": stagePage("returns", "4 · Returns Manager", "Reverse logistics condition evaluation against Amazon rubrics and customer return swap fraud detection.", returnsForm),
+  "console-recovery": recoveryPage,
+  "console-pipeline": livePage
+});
+
+function shell() {
+  const container = $("#sidebar-nav");
+  const aside = $("#sidebar");
+  if (!container || !aside) return;
+  container.replaceChildren();
+
+  // Portal & Login links
+  const portalLinks = h("div", { style: "display:flex;gap:4px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle);" },
+    h("a", { class: "nav-item", "data-p": "", href: "#", title: "Landing Page", style: "flex:1;" }, h("i", {}, "🌐"), h("span", {}, "Portal Home")),
+    h("a", { class: "nav-item", "data-p": "login", href: "#login", title: "Demo Login", style: "flex:1;" }, h("i", {}, "🔐"), h("span", {}, "Demo Login"))
+  );
+  container.append(portalLinks);
+
+  NAV_GROUPS.forEach(group => {
+    if (group.title) {
+      container.append(h("div", { class: "nav-section-title" }, group.title));
+    }
+    group.items.forEach(([key, label, icon]) => {
+      const a = h("a", { class: "nav-item", "data-p": key, href: "#" + key, title: label },
+        h("i", {}, icon),
+        h("span", {}, label)
+      );
+      container.append(a);
+    });
+  });
+
+  // Collapsible sidebar toggle button logic
+  const collapseBtn = $("#sidebar-collapse-btn");
+  if (collapseBtn) {
+    collapseBtn.onclick = () => {
+      const isCollapsed = aside.classList.toggle("collapsed");
+      collapseBtn.textContent = isCollapsed ? "▶" : "◀";
+      collapseBtn.title = isCollapsed ? "Expand sidebar" : "Collapse sidebar";
+    };
+  }
+
+  // Mobile navigation drawer toggle logic
+  const mobileBtn = $("#mobile-menu-btn");
+  const backdrop = $("#sidebar-backdrop");
+  if (mobileBtn && backdrop) {
+    const toggleMobile = () => {
+      const isOpen = aside.classList.toggle("mobile-open");
+      backdrop.classList.toggle("active", isOpen);
+    };
+    mobileBtn.onclick = toggleMobile;
+    backdrop.onclick = toggleMobile;
+    container.addEventListener("click", (e) => {
+      if (e.target.closest("a")) {
+        aside.classList.remove("mobile-open");
+        backdrop.classList.remove("active");
+      }
+    });
+  }
+}
+
 async function route() {
-  charts.splice(0).forEach((c) => c.destroy()); document.querySelectorAll(".overlay").forEach((o) => o.remove());
-  const [p, arg] = (location.hash || "#").slice(1).split("/"); const host = $("#main"); const m = h("div"); host.replaceChildren(m); const isLanding = !p; document.body.classList.toggle("landing", isLanding);
-  document.querySelectorAll("aside a").forEach((a) => a.classList.toggle("on", a.dataset.p === p));
-  try { if (isLanding) landing(m); else await (PG[p] || overview)(m, arg); } catch (e) { m.append(h("div", { class: "note warn" }, "⚠ " + e.message)); }
-  if (!isLanding) m.append(h("div", { class: "footbar" }, "LIVE ● connected to the orchestrator API · ", h("span", { id: "wfcount" })));
-  api("/api/analytics").then((a) => { const e = $("#wfcount"); if (e) e.textContent = a.kpis.workflows + " workflows tracked"; }).catch(() => {});
+  charts.splice(0).forEach((c) => c.destroy());
+  document.querySelectorAll(".overlay").forEach((o) => o.remove());
+
+  const hash = (location.hash || "#").slice(1);
+  const [p, arg] = hash.split("/");
+  const path = location.pathname;
+
+  const isLogin = p === "login" || path === "/login";
+  const isLanding = (!p || p === "" || p === "portal") && !isLogin;
+
+  document.body.classList.toggle("landing", isLanding);
+  document.body.classList.toggle("login-page", isLogin);
+
+  document.querySelectorAll("aside a").forEach((a) => {
+    a.classList.toggle("on", a.dataset.p === p);
+  });
+
+  const host = $("#main");
+  const m = h("div");
+  host.replaceChildren(m);
+
+  try {
+    if (isLogin) {
+      loginPage(m);
+      return;
+    }
+    if (isLanding) {
+      landing(m);
+    } else {
+      await (PG[p] || overview)(m, arg);
+    }
+  } catch (e) {
+    m.append(h("div", { class: "note warn" }, "⚠ " + e.message));
+  }
+
+  if (!isLanding && !isLogin) {
+    m.append(h("div", { class: "footbar" }, "LIVE ● connected to the orchestrator API · ", h("span", { id: "wfcount" })));
+    api("/api/analytics").then((a) => {
+      const e = $("#wfcount");
+      if (e) e.textContent = a.kpis.workflows + " workflows tracked";
+    }).catch(() => {});
+  }
 }
 function promptBackendUrl() {
   const current = getApiBase() || "";

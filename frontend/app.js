@@ -223,27 +223,36 @@ function receivingForm() {
   f.per.addEventListener("input", calcQty);
 
   const dz = dropzone(true);
-  const el = h("div", {},
-    h("div", { style: "margin-bottom:14px;background:var(--sky5);border:1px solid var(--line);border-radius:12px;padding:12px 14px;" },
-      field("📦 Select product (quick-fills SKU, specifications & order quantities)", pSel)
+  const el = h("div", { style: "display:flex;flex-direction:column;gap:16px;" },
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "📦"), "Inbound Product & Purchase Order Specifications"),
+      h("div", { style: "margin-bottom:14px;" },
+        field("Select catalog product (auto-populates SKU, specifications & order quantities)", pSel)
+      ),
+      h("div", { class: "form-grid g3" },
+        field("SKU", f.sku),
+        field("Product title", f.title),
+        field("Supplier", f.supplier),
+        field("Expected colour (n/a if none)", f.colour),
+        field("Expected variant", f.variant),
+        field("Components (; separated)", f.comps),
+        field("Cartons ordered", f.cartons),
+        field("Units per carton", f.per),
+        field("Expected quantity", f.qty)
+      )
     ),
-    h("div", { class: "grid g3" },
-      field("SKU", f.sku),
-      field("Product title", f.title),
-      field("Supplier", f.supplier),
-      field("Expected colour (n/a if none)", f.colour),
-      field("Expected variant", f.variant),
-      field("Components (; separated)", f.comps),
-      field("Cartons ordered", f.cartons),
-      field("Units per carton", f.per),
-      field("Expected quantity", f.qty)
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "🔢"), "Physical Count Verification (Optional)"),
+      h("div", { class: "form-grid g2" },
+        field("Operator-counted cartons", f.cc),
+        field("Operator-counted units per carton", f.uc)
+      )
     ),
-    h("div", { class: "grid g2" },
-      field("Operator-counted cartons (optional)", f.cc),
-      field("Operator-counted units per carton (optional)", f.uc)
-    ),
-    h("label", {}, "Receiving photographs (set each photo's role)"),
-    dz.el
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "📷"), "Dock Photographic Evidence"),
+      h("p", { class: "mute", style: "margin:0 0 10px;font-size:12.5px;" }, "Attach photos of cartons, pallets, and labels. Specify each photo's role."),
+      dz.el
+    )
   );
 
   const collect = () => ({
@@ -266,6 +275,7 @@ function receivingForm() {
 
   return { el, dz, collect };
 }
+
 function prepForm() {
   const PREP_PRODUCTS = [
     { sku: "SKU-CANDLE-3", fnsku: "X00DUMMY002", title: "Soy Candle Trio Gift Box", poly: true, suf: true, exp: false, marks: ["Fragile"] },
@@ -307,31 +317,44 @@ function prepForm() {
   };
 
   const dz = dropzone(false);
-  const el = h("div", {},
-    h("div", { style: "margin-bottom:14px;background:var(--sky5);border:1px solid var(--line);border-radius:12px;padding:12px 14px;" },
-      field("📦 Select product (quick-fills SKU, expected FNSKU & prep requirements)", pSel)
-    ),
-    h("div", { class: "grid g2" }, field("SKU", f.sku), field("Expected FNSKU (label text)", f.fnsku)),
-    h("label", {}, "Work-order requirements (Amazon FBA standard)"),
-    h("label", { class: "chk" }, f.poly, "Poly bag required (transparent, fully sealed)"),
-    h("label", { class: "chk" }, f.suf, "Suffocation warning required (openings ≥ 5\")"),
-    h("label", { class: "chk" }, f.exp, "Has expiration date (must remain visible)"),
-    h("label", {}, "Required handling marks"),
-    markDefs.map((m, i) => h("label", { class: "chk" }, marks[i], m)),
-    h("div", { class: "note" },
-      h("b", {}, "📋 AI Visual Prep Checks (fba@1 rules engine):"),
-      h("ul", { style: "margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.6;" },
-        h("li", {}, h("b", {}, "Polybag:"), " Verified present and fully sealed."),
-        h("li", {}, h("b", {}, "Suffocation Warning:"), " Verified visible and legible."),
-        h("li", {}, h("b", {}, "FNSKU Placement:"), " Verified on a flat scannable surface (fails if across curved edges, corners, or seams)."),
-        h("li", {}, h("b", {}, "Original Barcodes:"), " Pre-existing manufacturer barcode verified covered."),
-        h("li", {}, h("b", {}, "Expiry Date:"), " Verified visible and unobstructed."),
-        h("li", {}, h("b", {}, "Handling Marks:"), " Verified required markings present on exterior."),
-        h("li", {}, h("b", {}, "Physical Thickness (1.5 mil):"), " Recognized as non-verifiable from images (never guessed).")
+  const el = h("div", { style: "display:flex;flex-direction:column;gap:16px;" },
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "🏷"), "FBA Work Order & Item Specification"),
+      h("div", { style: "margin-bottom:14px;" },
+        field("Select product (auto-populates SKU, expected FNSKU & prep requirements)", pSel)
+      ),
+      h("div", { class: "form-grid g2" },
+        field("SKU", f.sku),
+        field("Expected FNSKU (label text)", f.fnsku)
       )
     ),
-    h("label", {}, "Photos of the prepared unit (front, back, label, warnings, seam…)"),
-    dz.el
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "📋"), "Amazon FBA Packaging Requirements"),
+      h("div", { style: "display:flex;flex-direction:column;gap:8px;margin-bottom:12px;" },
+        h("label", { class: "chk" }, f.poly, "Poly bag required (transparent, fully sealed)"),
+        h("label", { class: "chk" }, f.suf, "Suffocation warning required (openings >= 5 inches)"),
+        h("label", { class: "chk" }, f.exp, "Has expiration date (must remain visible)")
+      ),
+      h("label", { style: "font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;" }, "Required Handling Marks"),
+      h("div", { style: "display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;" },
+        markDefs.map((m, i) => h("label", { class: "chk" }, marks[i], m))
+      ),
+      h("div", { class: "note" },
+        h("b", {}, "📋 AI Visual Prep Checks (fba@1 rules engine):"),
+        h("ul", { style: "margin:6px 0 0;padding-left:18px;font-size:12px;line-height:1.6;" },
+          h("li", {}, h("b", {}, "Polybag:"), " Verified present and fully sealed."),
+          h("li", {}, h("b", {}, "Suffocation Warning:"), " Verified visible and legible."),
+          h("li", {}, h("b", {}, "FNSKU Placement:"), " Verified on a flat scannable surface (fails across curved edges/seams)."),
+          h("li", {}, h("b", {}, "Original Barcodes:"), " Pre-existing manufacturer barcode verified covered."),
+          h("li", {}, h("b", {}, "Physical Thickness:"), " Recognized as non-verifiable from images (never guessed).")
+        )
+      )
+    ),
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "📷"), "Prepared Unit Photographs"),
+      h("p", { class: "mute", style: "margin:0 0 10px;font-size:12.5px;" }, "Upload photos of the prepared unit (front, back, label, warnings, seam)."),
+      dz.el
+    )
   );
 
   const collect = () => ({
@@ -346,14 +369,48 @@ function prepForm() {
   });
   return { el, dz, collect };
 }
+
 function packForm() {
-  const lines = h("div", { class: "lines" }); const dz = dropzone(false);
-  const addLine = (n = "", c = "", v = "", q = 1) => { const r = h("div", { class: "row" }, inp(n, "text", "Product e.g. T-Shirt"), inp(c, "text", "Colour"), inp(v, "text", "Size / variant"), h("input", { type: "number", value: q, min: 1, style: "max-width:80px" }), h("button", { class: "ghost fix", type: "button", onclick: () => r.remove() }, "✕")); lines.append(r); };
-  addLine("T-Shirt", "black", "", 2); addLine("Cap", "blue", "", 1);
-  const el = h("div", {}, h("label", {}, "Expected order lines"), lines, h("button", { class: "ghost", type: "button", onclick: () => addLine() }, "+ add line"), h("label", {}, "Photo(s) of the OPEN package"), dz.el);
-  const collect = () => ({ order: [...lines.children].map((r) => { const i = r.querySelectorAll("input"); return { name: i[0].value, colour: i[1].value, variant: i[2].value, quantity: i[3].value }; }).filter((l) => l.name.trim()) });
+  const lines = h("div", { class: "lines" });
+  const dz = dropzone(false);
+  const addLine = (n = "", c = "", v = "", q = 1) => {
+    const r = h("div", { class: "row", style: "margin-bottom:8px;" },
+      inp(n, "text", "Product e.g. T-Shirt"),
+      inp(c, "text", "Colour"),
+      inp(v, "text", "Size / variant"),
+      h("input", { type: "number", value: q, min: 1, style: "max-width:80px" }),
+      h("button", { class: "ghost fix", type: "button", onclick: () => r.remove() }, "✕")
+    );
+    lines.append(r);
+  };
+  addLine("T-Shirt", "black", "", 2);
+  addLine("Cap", "blue", "", 1);
+
+  const el = h("div", { style: "display:flex;flex-direction:column;gap:16px;" },
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "📦"), "Customer Order Manifest & Expected Item Census"),
+      h("p", { class: "mute", style: "margin:0 0 12px;font-size:12.5px;" }, "Specify the item lines expected inside the shipping container."),
+      lines,
+      h("div", { style: "margin-top:10px;" },
+        h("button", { class: "ghost", type: "button", onclick: () => addLine() }, "+ Add Item Line")
+      )
+    ),
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "📷"), "Open Package Inspection Captures"),
+      h("p", { class: "mute", style: "margin:0 0 10px;font-size:12.5px;" }, "Attach top-down photos of the open box showing all items before taping/sealing."),
+      dz.el
+    )
+  );
+
+  const collect = () => ({
+    order: [...lines.children].map((r) => {
+      const i = r.querySelectorAll("input");
+      return { name: i[0].value, colour: i[1].value, variant: i[2].value, quantity: i[3].value };
+    }).filter((l) => l.name.trim())
+  });
   return { el, dz, collect };
 }
+
 function returnsForm() {
   const RET_PRESETS = [
     { sku: "SKU-HEADPHONES-BT", title: "Wireless Over-Ear Headphones", parts: "headphones;carrying case;usb cable;manual", desc: "Black over-ear wireless headphones with fold-flat earcups" },
@@ -374,7 +431,7 @@ function returnsForm() {
   const init = RET_PRESETS[0];
   const title = inp(init.title), parts = inp(init.parts), desc = inp(init.desc, "text", "optional: what it looks like");
   const dz = dropzone(false);
-  const info = h("p", { class: "mute", style: "margin:4px 0 10px;" }, "Expected components: " + init.parts.split(";").join(", "));
+  const info = h("p", { class: "mute", style: "margin:4px 0 10px;font-size:12px;" }, "Expected components: " + init.parts.split(";").join(", "));
 
   sel.onchange = () => {
     if (sel.value === "custom") {
@@ -391,57 +448,209 @@ function returnsForm() {
     }
   };
 
-  const el = h("div", {},
-    h("div", { style: "margin-bottom:14px;background:var(--sky5);border:1px solid var(--line);border-radius:12px;padding:12px 14px;" },
-      field("📦 Select product ordered (defines expected item & required accessories)", sel)
+  const el = h("div", { style: "display:flex;flex-direction:column;gap:16px;" },
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "↩"), "Customer Return Catalog Signature"),
+      h("div", { style: "margin-bottom:14px;" },
+        field("Select product ordered (defines expected product signature & components)", sel)
+      ),
+      h("div", { class: "form-grid g3" },
+        field("Product title", title),
+        field("Expected components & accessories (;)", parts),
+        field("Visual description", desc)
+      ),
+      info
     ),
-    h("div", { class: "grid g3" }, field("Product title", title), field("Expected accessories & components (;)", parts), field("Visual appearance", desc)),
-    info,
-    h("div", { class: "note" },
-      h("b", {}, "🔍 Customer Returns Multi-Modal Inspection (Amazon Guidelines):"),
-      h("ul", { style: "margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.6;" },
-        h("li", {}, h("b", {}, "1. Product Identity:"), " Verifies returned physical item matches ordered product (detects swap fraud)."),
-        h("li", {}, h("b", {}, "2. Completeness:"), " Audits every component, accessory, cable, manual. Flags missing items."),
-        h("li", {}, h("b", {}, "3. Condition Assessment:"), " Graded against Amazon's official scale: New, Used - Like New, Used - Very Good, Used - Good, Used - Acceptable, Unacceptable."),
-        h("li", {}, h("b", {}, "4. Recommended Disposition:"),
-          " ", h("span", { class: "badge PASS" }, "RESTOCK"), " (New/Like-New & complete) · ",
-          h("span", { class: "badge refurbish" }, "REFURBISH"), " (Minor missing replaceable cable or repackaging needed) · ",
-          h("span", { class: "badge liquidate" }, "LIQUIDATE"), " (Functional with cosmetic wear) · ",
-          h("span", { class: "badge FAIL" }, "DISPOSE"), " (Unacceptable damage or opened hygiene item)."
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "🔍"), "Amazon Condition Grading & Disposition Standards"),
+      h("div", { class: "note" },
+        h("b", {}, "Amazon Returns Multi-Modal Inspection Scale:"),
+        h("ul", { style: "margin:6px 0 0;padding-left:18px;font-size:12px;line-height:1.6;" },
+          h("li", {}, h("b", {}, "Identity:"), " Verifies physical item matches catalog signature (flags swap fraud)."),
+          h("li", {}, h("b", {}, "Completeness:"), " Audits essential cables, adaptors, and accessories."),
+          h("li", {}, h("b", {}, "Condition Scale:"), " New, Used - Like New, Used - Very Good, Used - Good, Used - Acceptable, Unacceptable."),
+          h("li", {}, h("b", {}, "Disposition:"),
+            " ", h("span", { class: "badge PASS" }, "RESTOCK"),
+            " · ", h("span", { class: "badge refurbish" }, "REFURBISH"),
+            " · ", h("span", { class: "badge liquidate" }, "LIQUIDATE"),
+            " · ", h("span", { class: "badge FAIL" }, "DISPOSE")
+          )
         )
       )
     ),
-    h("label", {}, "Photos of the returned item and packaging"),
-    dz.el
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "📷"), "Returned Item & Packaging Photographs"),
+      h("p", { class: "mute", style: "margin:0 0 10px;font-size:12.5px;" }, "Upload photos showing returned product condition, accessories, and packaging."),
+      dz.el
+    )
   );
 
   const collect = () => sel.value && sel.value !== "custom" ? { product: { sku: sel.value, title: title.value, parts: parts.value.split(";"), visual_description: desc.value } } : { product: { title: title.value, parts: parts.value.split(";"), visual_description: desc.value } };
   return { el, dz, collect };
 }
+
 function stagePage(stage, label, sub, mk) {
   return async (m) => {
-    m.append(h("h2", {}, label), h("p", { class: "sub" }, sub)); const f = mk(); const out = h("div"); const card = h("div", { class: "card" }, f.el);
-    const btn = h("button", { onclick: () => submitLab(btn, out, () => { const fd = new FormData(); fd.append("stage", stage); fd.append("data", JSON.stringify(f.collect())); fd.append("roles", JSON.stringify(f.dz.roles()));
-      f.dz.files.forEach((x) => fd.append("photos", x.file)); return fd; }) }, "▶ Run " + label + " Agent");
-    card.append(h("div", { style: "margin-top:14px" }, btn)); m.append(card, out);
-    const a = h("div", { class: "card" }, h("h3", {}, "History: " + label + " outcomes across all runs")); m.append(a); const an = await api("/api/analytics"); doughnut(a, an.stage_outcomes[stage] || {});
+    const header = h("div", { class: "page-header-strip" },
+      h("div", { class: "page-header-title-box" },
+        h("div", { style: "font-family:var(--font-mono);font-size:11px;color:var(--mute);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;" },
+          "Agent Console · " + stage.toUpperCase()
+        ),
+        h("h2", {}, label),
+        h("p", { class: "sub" }, sub)
+      ),
+      h("div", { class: "header-action-group" },
+        h("span", { class: "badge PASS" }, "● ONLINE · Groq Vision"),
+        h("a", { class: "btn ghost", href: "#live" }, "All-Agents Pipeline →")
+      )
+    );
+
+    const f = mk();
+    const out = h("div", { class: "output-dossier-card" },
+      h("div", { class: "empty-dossier-state" },
+        h("span", { class: "empty-dossier-icon" }, "🔍"),
+        h("b", { style: "display:block;margin-bottom:4px;color:var(--ink);" }, "Inspection Output Dossier"),
+        h("p", { class: "mute", style: "margin:0;font-size:12.5px;" },
+          "Configure the work order specifications and attach photographic evidence, then trigger the inspection."
+        )
+      )
+    );
+
+    const btn = h("button", {
+      class: "btn-primary-prominent",
+      onclick: () => submitLab(btn, out, () => {
+        const fd = new FormData();
+        fd.append("stage", stage);
+        fd.append("data", JSON.stringify(f.collect()));
+        fd.append("roles", JSON.stringify(f.dz.roles()));
+        f.dz.files.forEach((x) => fd.append("photos", x.file));
+        return fd;
+      })
+    }, "▶ Run " + label + " Inspection");
+
+    const leftCol = h("div", { class: "agent-column-form" },
+      f.el,
+      h("div", { class: "agent-section-card" },
+        h("h3", {}, "Execution Controls"),
+        btn
+      )
+    );
+
+    const rightCol = h("div", { class: "agent-column-results" }, out);
+    const workspace = h("div", { class: "agent-workspace-grid" }, leftCol, rightCol);
+
+    const historyCard = h("div", { class: "card", style: "margin-top:24px;" },
+      h("h3", {}, "Historical Outcomes: " + label + " Across All Workflows")
+    );
+    const historyDoughnut = h("div", { id: "history-doughnut-box-" + stage });
+    historyCard.append(historyDoughnut);
+
+    m.append(header, workspace, historyCard);
+
+    try {
+      const an = await api("/api/analytics");
+      doughnut(historyDoughnut, an.stage_outcomes[stage] || {});
+    } catch {}
   };
 }
-// ---------------------------------------------------------------- recovery
+
 const EX = "Charge ID: 48291\nShipment: SHP-10291\nReason: Packaging defect\nAmount: $38\n\nCharge ID: 48292\nShipment: SHP-10291\nReason: Weight tier fee\nAmount: $4.75";
+
 async function recoveryPage(m, embedded) {
-  if (!embedded) m.append(h("h2", {}, "5 · Recovery Manager"), h("p", { class: "sub" }, "Parse a fee / reimbursement report and match each charge against evidence from the other managers. No evidence → SILENT → no claim."));
-  const an = await api("/api/analytics"); const wfs = an.recent.filter((r) => r.stages.length);
-  const sel = h("select", {}, h("option", { value: "" }, "No upstream evidence (everything will be SILENT)"), wfs.map((w) => h("option", { value: w.workflow_id }, w.unit_id + " · " + (w.outcome || w.status) + " · " + w.stages.join(" → "))));
-  const ta = h("textarea", { style: "min-height:150px" }); ta.value = EX; const out = h("div");
-  const run = h("button", { onclick: async () => { run.disabled = true; try { const r = await api("/api/lab/recovery", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ report: ta.value, workflow_id: sel.value }) });
-    out.replaceChildren(); out.append(h("div", { class: "note" }, "Parsed " + r.parsed_charges.length + " charge(s) · evidence records used: " + (r.evidence_used.join(", ") || "none"))); renderEvidence(r.output.evidence, out); } catch (e) { out.replaceChildren(h("div", { class: "note warn" }, "⚠ " + e.message)); } run.disabled = false; } }, "▶ Analyse charges");
-  m.append(h("div", { class: "card" }, field("Evidence source (a completed workflow — try a sample or lab run)", sel), h("label", {}, "Fee / reimbursement report — paste CSV, JSON or 'Key: value' blocks"), ta,
-    h("div", { style: "margin:12px 0" }, run, " ", h("button", { class: "ghost", onclick: () => (ta.value = EX) }, "Load example"))), out);
-  if (embedded) return;
-  const g = h("div", { class: "grid g2" }); const a = h("div", { class: "card" }, h("h3", {}, "Charge assessments (all runs)")), b = h("div", { class: "card" }, h("h3", {}, "Claimable $ by charge type")); doughnut(a, an.recovery_positions, { SUPPORTS: "#10b981", CONTRADICTS: "#ef4444", SILENT: "#f59e0b" });
-  bar(b, Object.keys(an.claimable_by_type), [{ label: "Claimable $", data: Object.values(an.claimable_by_type) }]); g.append(a, b); m.append(g);
+  const header = !embedded ? h("div", { class: "page-header-strip" },
+    h("div", { class: "page-header-title-box" },
+      h("div", { style: "font-family:var(--font-mono);font-size:11px;color:var(--mute);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;" },
+        "Agent Console · RECOVERY"
+      ),
+      h("h2", {}, "5 · Recovery Manager"),
+      h("p", { class: "sub" }, "Parse fee and reimbursement ledgers and cross-reference each charge against immutable evidence from upstream managers.")
+    ),
+    h("div", { class: "header-action-group" },
+      h("span", { class: "badge PASS" }, "● Defensible Claims Engine"),
+      h("a", { class: "btn ghost", href: "#recovery" }, "Recovery Hub →")
+    )
+  ) : null;
+
+  const an = await api("/api/analytics");
+  const wfs = an.recent.filter((r) => r.stages.length);
+  const sel = h("select", {},
+    h("option", { value: "" }, "No upstream evidence (all charges will evaluate as SILENT)"),
+    wfs.map((w) => h("option", { value: w.workflow_id }, `${w.unit_id} · ${w.outcome || w.status} · ${w.stages.join(" → ")}`))
+  );
+
+  const ta = h("textarea", { style: "min-height:160px;" });
+  ta.value = EX;
+  const out = h("div", { class: "output-dossier-card" },
+    h("div", { class: "empty-dossier-state" },
+      h("span", { class: "empty-dossier-icon" }, "💳"),
+      h("b", { style: "display:block;margin-bottom:4px;color:var(--ink);" }, "Fee Audit & Claim Dossier"),
+      h("p", { class: "mute", style: "margin:0;font-size:12.5px;" }, "Select an evidence source and input fee lines, then run the claim analysis.")
+    )
+  );
+
+  const run = h("button", {
+    class: "btn-primary-prominent",
+    onclick: async () => {
+      run.disabled = true;
+      run.innerHTML = '<span class="spin"></span> Auditing Charges…';
+      try {
+        const r = await api("/api/lab/recovery", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ report: ta.value, workflow_id: sel.value })
+        });
+        out.replaceChildren();
+        out.append(
+          h("div", { class: "note", style: "margin-bottom:14px;" },
+            `Audited ${r.parsed_charges.length} charge(s) against evidence: ${r.evidence_used.join(", ") || "none"}`
+          )
+        );
+        renderEvidence(r.output.evidence, out);
+      } catch (e) {
+        out.replaceChildren(h("div", { class: "note warn" }, "⚠ " + e.message));
+      } finally {
+        run.disabled = false;
+        run.textContent = "▶ Analyze Charges & Audit Claims";
+      }
+    }
+  }, "▶ Analyze Charges & Audit Claims");
+
+  const leftCol = h("div", { class: "agent-column-form" },
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, h("span", { class: "icon" }, "🔗"), "Upstream Evidence Source"),
+      field("Completed workflow evidence record", sel)
+    ),
+    h("div", { class: "agent-section-card" },
+      h("div", { style: "display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;" },
+        h("h3", { style: "margin:0;" }, h("span", { class: "icon" }, "📄"), "Fee & Reimbursement Report"),
+        h("button", { class: "ghost", style: "height:28px;padding:0 8px;font-size:11px;", onclick: () => (ta.value = EX) }, "Load Example")
+      ),
+      h("p", { class: "mute", style: "margin:0 0 8px;font-size:12px;" }, "Paste charge report lines (supports CSV, JSON, or Key: Value blocks)."),
+      ta
+    ),
+    h("div", { class: "agent-section-card" },
+      h("h3", {}, "Execution Controls"),
+      run
+    )
+  );
+
+  const rightCol = h("div", { class: "agent-column-results" }, out);
+  const workspace = h("div", { class: "agent-workspace-grid" }, leftCol, rightCol);
+
+  if (header) m.append(header);
+  m.append(workspace);
+
+  if (!embedded) {
+    const chartsRow = h("div", { class: "grid g2", style: "margin-top:24px;" });
+    const c1 = h("div", { class: "card" }, h("h3", {}, "Historical Charge Assessments (All Runs)"));
+    const c2 = h("div", { class: "card" }, h("h3", {}, "Claimable Reimbursement by Type"));
+    doughnut(c1, an.recovery_positions, { SUPPORTS: "#10b981", CONTRADICTS: "#ef4444", SILENT: "#f59e0b" });
+    bar(c2, Object.keys(an.claimable_by_type), [{ label: "Claimable $", data: Object.values(an.claimable_by_type), backgroundColor: "#059669" }]);
+    chartsRow.append(c1, c2);
+    m.append(chartsRow);
+  }
 }
+
 // ---------------------------------------------------------------- pipeline
 async function pipelinePage(m) {
   m.append(h("h2", {}, "🔗 Full pipeline — one unit through all agents"), h("p", { class: "sub" }, "Receiving → Prep (FBA) or Pack (merchant) → Returns (optional) → Recovery. Evidence flows forward; the orchestrator derives the final outcome."));
