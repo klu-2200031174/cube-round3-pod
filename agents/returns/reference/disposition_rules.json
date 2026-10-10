@@ -1,0 +1,105 @@
+{
+  "version": "rules-2026-09-28c",
+  "thresholds": {
+    "identity_min_confidence": 0.75,
+    "component_min_confidence": 0.7,
+    "condition_min_confidence": 0.65
+  },
+  "rules": [
+    {
+      "id": "R01_MODEL_UNAVAILABLE",
+      "disposition": "pending_review",
+      "when": "The vision model failed, timed out or returned unusable output. Captured images are kept; a human (or a retry) decides."
+    },
+    {
+      "id": "R02_NO_USABLE_IMAGES",
+      "disposition": "pending_review",
+      "when": "No submitted photo was usable for inspection."
+    },
+    {
+      "id": "R03_IDENTITY_FAIL",
+      "disposition": "pending_review",
+      "when": "Returned item is not the ordered SKU, or the package is empty. Never restocked under the ordered SKU; routed to review as a possible wrong-item / return-abuse case."
+    },
+    {
+      "id": "R04_IDENTITY_UNCERTAIN",
+      "disposition": "pending_review",
+      "when": "Identity could not be established from the evidence."
+    },
+    {
+      "id": "R05_CONDITION_UNCERTAIN",
+      "disposition": "pending_review",
+      "when": "Condition could not be graded on the published scale."
+    },
+    {
+      "id": "R06_UNACCEPTABLE_SEVERE",
+      "disposition": "dispose",
+      "when": "Condition is Unacceptable and at least one damage finding is severe (unusable, broken, contaminated)."
+    },
+    {
+      "id": "R07_UNACCEPTABLE",
+      "disposition": "liquidate",
+      "when": "Condition is Unacceptable without severe damage (e.g. needs repair) - no longer listable, recover residual value."
+    },
+    {
+      "id": "R08_HYGIENE_USED",
+      "disposition": "dispose",
+      "when": "Hygiene-sensitive category (catalogue flag) that is no longer factory-sealed / New. Only sealed hygiene items are restocked; this avoids flipping between 'opened' and 'lightly used', which photos cannot separate reliably."
+    },
+    {
+      "id": "R09_COMPLETENESS_UNCERTAIN",
+      "disposition": "pending_review",
+      "when": "At least one expected component could not be confirmed present or absent, and none is confirmed missing."
+    },
+    {
+      "id": "R09B_UNVERIFIED_PARTS_MATTER",
+      "disposition": "pending_review",
+      "when": "Some parts are confirmed missing and others could not be seen, and the disposition would change depending on whether the unseen parts are present."
+    },
+    {
+      "id": "R10_MISSING_CORE_PART",
+      "disposition": "liquidate",
+      "when": "A missing component is flagged non-replaceable in the catalogue (the unit cannot be made whole)."
+    },
+    {
+      "id": "R11_MISSING_MULTIPLE",
+      "disposition": "liquidate",
+      "when": "Two or more components are missing."
+    },
+    {
+      "id": "R12_MISSING_ONE_REPLACEABLE",
+      "disposition": "refurbish",
+      "when": "Exactly one replaceable component is missing and the item grades Used - Good or better: replace the part and relist."
+    },
+    {
+      "id": "R13_MISSING_ONE_LOW_GRADE",
+      "disposition": "liquidate",
+      "when": "Exactly one replaceable component is missing but the item grades Used - Acceptable."
+    },
+    {
+      "id": "R14_COMPLETE_NEW",
+      "disposition": "restock",
+      "when": "Complete and New (factory condition)."
+    },
+    {
+      "id": "R15_COMPLETE_LIKE_NEW",
+      "disposition": "restock",
+      "when": "Complete and Used - Like New: restock under the Used - Like New grade."
+    },
+    {
+      "id": "R16_COMPLETE_WEAR",
+      "disposition": "refurbish",
+      "when": "Complete and Used - Very Good or Used - Good: clean / repackage, then relist under the assigned grade."
+    },
+    {
+      "id": "R17_COMPLETE_ACCEPTABLE",
+      "disposition": "liquidate",
+      "when": "Complete but only Used - Acceptable."
+    },
+    {
+      "id": "R99_FALLBACK",
+      "disposition": "pending_review",
+      "when": "No rule matched - never guess."
+    }
+  ]
+}

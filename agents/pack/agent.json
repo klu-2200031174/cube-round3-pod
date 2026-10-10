@@ -1,0 +1,10 @@
+{
+  "stage": "pack",
+  "agent_id": "pack-manager@1.0.0",
+  "owner": "@dheerajchandra28",
+  "mode": "inproc",
+  "url": "http://localhost:8103",
+  "module": "agents.pack.app",
+  "implementation": "Pack Manager: Groq vision lists the items in the open box (blind to the order); engine.py matches them to the order: SEAL / STOP & FIX / UNCERTAIN. Needs GROQ_API_KEY.",
+  "notes": "In-process by default. Serves FastAPI/Uvicorn on port 8103. Uses visual verification of package contents against expected orders to make SEAL or STOP & FIX determinations."
+}

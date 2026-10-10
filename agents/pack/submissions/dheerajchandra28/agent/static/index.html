@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pack Manager AI Agent - Next Gen 3D</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>📦 Pack Manager 3D</h1>
+            <p>Next-Gen AI Packing Verification</p>
+        </header>
+        
+        <main>
+            <div class="grid">
+                <!-- 3D Card wrapper -->
+                <div class="card-3d-wrapper">
+                    <div class="card input-section glass-panel">
+                        <div class="section-header">
+                            <h2>1. Expected Order</h2>
+                            <button id="scan-barcode-btn" class="action-btn text-xs">
+                                <span class="icon">🔍</span> Scan Order Barcode
+                            </button>
+                        </div>
+                        <p class="subtitle">Define what should be in the box or scan to pull from WMS.</p>
+                        
+                        <div id="reader" style="display: none; width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1);"></div>
+                        
+                        <div id="order-lines">
+                            <div class="order-line">
+                                <input type="text" class="sku-input" placeholder="e.g. SKU-TOWEL-BLU" value="BLUE-TOWEL">
+                                <input type="number" class="qty-input" placeholder="Qty" value="1" min="1">
+                                <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+                            </div>
+                        </div>
+                        
+                        <button id="add-line-btn" class="secondary-btn">+ Add Item</button>
+                        
+                        <div class="section-header mt-4">
+                            <h2>2. Package Capture</h2>
+                            <button id="camera-toggle-btn" class="action-btn text-xs">
+                                <span class="icon">🎥</span> Live Camera
+                            </button>
+                        </div>
+                        <p class="subtitle">Upload or capture the photo of the package before sealing.</p>
+                        
+                        <div class="upload-area" id="upload-area">
+                            <input type="file" id="image-upload" accept="image/*" hidden>
+                            <label for="image-upload" class="upload-label" id="upload-label">
+                                <div class="upload-icon">📷</div>
+                                <span>Drag & Drop or Click to Upload</span>
+                            </label>
+                            
+                            <div id="image-preview-container" style="display: none;">
+                                <img id="image-preview" src="" alt="Preview">
+                                <div class="laser-scanner" id="laser-scanner"></div>
+                            </div>
+                            
+                            <!-- Hidden video element for live camera feed -->
+                            <video id="camera-feed" autoplay playsinline style="display: none;"></video>
+                        </div>
+                        
+                        <button id="verify-btn" class="primary-btn mt-4">Initialize Neural Verification</button>
+                    </div>
+                </div>
+                
+                <div class="card-3d-wrapper">
+                    <div class="card output-section glass-panel">
+                        <h2>3. Verification Result</h2>
+                        <p class="subtitle">AI Agent Analysis & Insights.</p>
+                        
+                        <div id="loading" class="hidden">
+                            <div class="spinner"></div>
+                            <p>Neural engine analyzing package...</p>
+                            <div class="processing-steps">
+                                <p class="step active">Identifying items...</p>
+                                <p class="step">Cross-referencing SKUs...</p>
+                                <p class="step">Validating quantities...</p>
+                            </div>
+                        </div>
+                        
+                        <div id="results" class="hidden">
+                            <div class="verdict-banner" id="verdict-banner">
+                                <h3 id="decision-text">SEAL</h3>
+                                <p id="reasoning-text">All items perfectly match the expected order.</p>
+                                
+                                <div class="confidence-meter mt-4">
+                                    <div class="confidence-label">
+                                        <span>AI Confidence Score</span>
+                                        <span id="confidence-val">98%</span>
+                                    </div>
+                                    <div class="confidence-bar-bg">
+                                        <div class="confidence-bar-fill" id="confidence-bar-fill" style="width: 98%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4>Detected</h4>
+                                    <ul id="detected-list" class="item-list"></ul>
+                                </div>
+                                <div class="detail-card error-card">
+                                    <h4>Issues</h4>
+                                    <ul id="issues-list" class="item-list"></ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="placeholder-result" class="placeholder">
+                            <div class="hologram-icon">🤖</div>
+                            <p>Awaiting package input to initialize the verification sequence.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Floating Features Section -->
+    <div class="features-widget glass-panel">
+        <h3>✨ Premium Capabilities</h3>
+        <ul>
+            <li><span class="icon">🔗</span> WMS Barcode Integration</li>
+            <li><span class="icon">🎥</span> Live Station Camera Feed</li>
+            <li><span class="icon">🔍</span> Sub-millimeter visual analysis</li>
+            <li><span class="icon">📊</span> Automated discrepancy reporting</li>
+        </ul>
+        <div class="glow-orb"></div>
+    </div>
+    
+    <script src="script.js?v=3"></script>
+    <script>
+        // 3D Parallax effect on mouse move
+        document.addEventListener('mousemove', (e) => {
+            if (window.innerWidth < 900) return; // Disable on small screens
+            const wrappers = document.querySelectorAll('.card-3d-wrapper');
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 40;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 40;
+            
+            wrappers.forEach(wrapper => {
+                wrapper.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            });
+            
+            const featureWidget = document.querySelector('.features-widget');
+            if(featureWidget) {
+                const fX = (window.innerWidth / 2 - e.pageX) / 80;
+                const fY = (window.innerHeight / 2 - e.pageY) / 80;
+                featureWidget.style.transform = `translateZ(100px) rotateY(${fX}deg) rotateX(${fY}deg)`;
+            }
+        });
+    </script>
+</body>
+</html>

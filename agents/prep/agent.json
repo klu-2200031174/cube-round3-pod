@@ -1,0 +1,10 @@
+{
+  "stage": "prep",
+  "agent_id": "prep-manager@0.1.0",
+  "owner": "@dheerajchandra28",
+  "mode": "inproc",
+  "url": "http://localhost:8102",
+  "module": "agents.prep.app",
+  "implementation": "Prep Manager rule pack fba@1 with Groq vision observations (met / not_met / cant_tell). Needs GROQ_API_KEY.",
+  "notes": "In-process by default. Also serves GET /health and POST /run: uvicorn agents.prep.app:app --port 8102. Needs GEMINI_API_KEY in .env to inspect photos; without it every photographed unit fails open to a pending record."
+}

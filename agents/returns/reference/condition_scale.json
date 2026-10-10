@@ -1,0 +1,42 @@
+{
+  "scale_id": "amazon-condition-guidelines",
+  "retrieved_at": "2026-09-28",
+  "sources": [
+    "https://sell.amazon.com/blog/amazon-condition-guidelines",
+    "https://www.amazon.com/gp/help/customer/display.html?nodeId=201889720"
+  ],
+  "note": "Grade text below is quoted from Amazon's published condition guidelines (source 1). The agent grades ONLY against these grades. 'Renewed' and 'Collectible' are published grades but are not assigned by a returns inspection (Renewed requires testing by an Amazon-qualified supplier; Collectible requires additional collectible value), so the agent never outputs them. 'Unacceptable' is not a listing grade: it is Amazon's published list of items that may not be listed in any condition, used here as the out-of-scale bucket.",
+  "grades": [
+    {
+      "grade": "New",
+      "rank": 5,
+      "definition": "For a product to be considered New, it should be as if you walked into a store and bought it right off the shelf in its factory packaging."
+    },
+    {
+      "grade": "Used - Like New",
+      "rank": 4,
+      "definition": "It's in perfect working condition and may be missing its original shrink wrap, but overall it's intact and fully functional."
+    },
+    {
+      "grade": "Used - Very Good",
+      "rank": 3,
+      "definition": "Despite showing a little wear and tear, these are items that are still in good working condition despite the odd blemish."
+    },
+    {
+      "grade": "Used - Good",
+      "rank": 2,
+      "definition": "It may show some wear from consistent use, like minor cosmetic damage, but it's still functional."
+    },
+    {
+      "grade": "Used - Acceptable",
+      "rank": 1,
+      "definition": "Signs of wear can include worn corners, scratches, and dents."
+    }
+  ],
+  "unacceptable": {
+    "grade": "Unacceptable",
+    "rank": 0,
+    "definition": "Not listable in any condition. Amazon lists as unacceptable products that are dirty, corroded, heavily stained or moldy; damaged to the point where they can't be used; missing essential parts; in need of repair; counterfeit; promotional copies; at or near expiration; or marked for destruction."
+  },
+  "excluded_grades": ["Renewed", "Collectible"]
+}

@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "outputDirectory": "frontend",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/static/:match*",
+      "destination": "/:match*"
+    },
+    {
+      "source": "/api/:match*",
+      "destination": "https://cube-round3-pod-backend.onrender.com/api/:match*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://cube-round3-pod-backend.onrender.com/health"
+    },
+    {
+      "source": "/workflows/:match*",
+      "destination": "https://cube-round3-pod-backend.onrender.com/workflows/:match*"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "stage": "returns",
+  "agent_id": "returns-manager@0.2.0",
+  "owner": "@klu-2200031174",
+  "mode": "inproc",
+  "url": "http://localhost:8104",
+  "module": "agents.returns.app",
+  "implementation": "Returns Manager: one batched Groq vision call reports observations; deterministic checks (identity, completeness, Amazon condition scale) and an ordered rule table decide the disposition. Needs GROQ_API_KEY.",
+  "notes": "In-process by default. Also serves GET /health and POST /run: uvicorn agents.returns.app:app --port 8104. Needs GEMINI_API_KEY in .env to inspect photos; without it every photographed unit fails open to a pending record."
+}

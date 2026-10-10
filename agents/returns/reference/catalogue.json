@@ -1,0 +1,699 @@
+{
+  "_note": "SYNTHETIC seller catalogue. SKUs/ASINs for the first ten items come from data/returns_sample.csv; visual descriptions, part attributes and look-alike SKUs are illustrative and must be replaced with the seller's real catalogue. To demo with your own objects, edit an entry so its description matches the object you photograph.",
+  "items": [
+    {
+      "sku": "SKU-PUZZLE-500",
+      "asin": "B0DUMMY729",
+      "title": "500-piece jigsaw puzzle",
+      "category": "toys_games",
+      "visual_description": "Rectangular cardboard box containing loose interlocking puzzle pieces and a folded reference poster of the finished image.",
+      "distinguishing_features": [
+        "box states 500 pieces",
+        "folded poster of the finished picture"
+      ],
+      "parts": [
+        {
+          "name": "puzzle pieces",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "poster",
+          "essential": false,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-PUZZLE-1000"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-PUZZLE-1000",
+      "asin": "B0DUMMY730",
+      "title": "1000-piece jigsaw puzzle",
+      "category": "toys_games",
+      "visual_description": "Larger rectangular cardboard box containing smaller loose puzzle pieces and a folded reference poster.",
+      "distinguishing_features": [
+        "box states 1000 pieces",
+        "noticeably smaller pieces than the 500 version"
+      ],
+      "parts": [
+        {
+          "name": "puzzle pieces",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "poster",
+          "essential": false,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-PUZZLE-500"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-LAMP-LED",
+      "asin": "B0DUMMY357",
+      "title": "LED desk lamp",
+      "category": "home_electronics",
+      "visual_description": "Small LED desk lamp with a flexible neck, supplied with a USB power cable and a printed instruction manual.",
+      "distinguishing_features": [
+        "flexible neck",
+        "USB powered",
+        "touch switch on base"
+      ],
+      "parts": [
+        {
+          "name": "lamp",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "usb cable",
+          "essential": true,
+          "replaceable": true
+        },
+        {
+          "name": "manual",
+          "essential": false,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-TOWEL-BLU",
+      "asin": "B0DUMMY600",
+      "title": "Bath towel, blue",
+      "category": "home_textiles",
+      "visual_description": "Folded blue cotton bath towel.",
+      "distinguishing_features": [
+        "blue colour"
+      ],
+      "parts": [
+        {
+          "name": "towel",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-TOWEL-GRN"
+      ],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-TOWEL-GRN",
+      "asin": "B0DUMMY601",
+      "title": "Bath towel, green",
+      "category": "home_textiles",
+      "visual_description": "Folded green cotton bath towel, same weave and size as the blue variant.",
+      "distinguishing_features": [
+        "green colour"
+      ],
+      "parts": [
+        {
+          "name": "towel",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-TOWEL-BLU"
+      ],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-BOTTLE-750",
+      "asin": "B0DUMMY622",
+      "title": "Water bottle 750 ml",
+      "category": "kitchen",
+      "visual_description": "Reusable 750 ml water bottle with a screw-on lid.",
+      "distinguishing_features": [
+        "750 ml capacity marking",
+        "taller than the 500 ml version"
+      ],
+      "parts": [
+        {
+          "name": "bottle",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "lid",
+          "essential": true,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-BOTTLE-500"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-BOTTLE-500",
+      "asin": "B0DUMMY623",
+      "title": "Water bottle 500 ml",
+      "category": "kitchen",
+      "visual_description": "Reusable 500 ml water bottle with a screw-on lid, same design as the 750 ml version.",
+      "distinguishing_features": [
+        "500 ml capacity marking",
+        "shorter body"
+      ],
+      "parts": [
+        {
+          "name": "bottle",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "lid",
+          "essential": true,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-BOTTLE-750"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-SERUM-30",
+      "asin": "B0DUMMY031",
+      "title": "Face serum 30 ml",
+      "category": "beauty",
+      "visual_description": "30 ml glass serum bottle with a separate dropper and a folded product leaflet.",
+      "distinguishing_features": [
+        "30 ml marking",
+        "glass dropper"
+      ],
+      "parts": [
+        {
+          "name": "bottle",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "dropper",
+          "essential": true,
+          "replaceable": true
+        },
+        {
+          "name": "leaflet",
+          "essential": false,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-PROT-1KG",
+      "asin": "B0DUMMY357",
+      "title": "Protein powder 1 kg",
+      "category": "grocery_supplements",
+      "visual_description": "1 kg plastic tub of protein powder with a measuring scoop inside.",
+      "distinguishing_features": [
+        "1 kg marking",
+        "sealed foil under lid when unopened"
+      ],
+      "parts": [
+        {
+          "name": "tub",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "scoop",
+          "essential": false,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-LEASH-6FT",
+      "asin": "B0DUMMY205",
+      "title": "Dog leash 6 ft",
+      "category": "pet_supplies",
+      "visual_description": "6 ft nylon dog leash with a handle loop and metal clip.",
+      "distinguishing_features": [
+        "metal clip",
+        "handle loop"
+      ],
+      "parts": [
+        {
+          "name": "leash",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-CANDLE-3",
+      "asin": "B0DUMMY964",
+      "title": "Candle set of 3 in gift box",
+      "category": "home_decor",
+      "visual_description": "Three matching candles presented in a gift box.",
+      "distinguishing_features": [
+        "three candles",
+        "gift box"
+      ],
+      "parts": [
+        {
+          "name": "candle x3",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "gift box",
+          "essential": false,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-MUG-11",
+      "asin": "B0DUMMY351",
+      "title": "11 oz mug, set of 2",
+      "category": "kitchen",
+      "visual_description": "Two matching 11 oz ceramic mugs.",
+      "distinguishing_features": [
+        "two identical mugs"
+      ],
+      "parts": [
+        {
+          "name": "mug x2",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-CABLE-USBC",
+      "asin": "B0DUMMY261",
+      "title": "USB-C cable",
+      "category": "electronics_accessories",
+      "visual_description": "Charging cable with a USB-C connector on both ends.",
+      "distinguishing_features": [
+        "oval reversible USB-C connectors on both ends"
+      ],
+      "parts": [
+        {
+          "name": "cable",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-CABLE-USBA"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-CABLE-USBA",
+      "asin": "B0DUMMY262",
+      "title": "USB-A to USB-C cable",
+      "category": "electronics_accessories",
+      "visual_description": "Charging cable with a rectangular USB-A connector on one end and USB-C on the other.",
+      "distinguishing_features": [
+        "one rectangular USB-A connector"
+      ],
+      "parts": [
+        {
+          "name": "cable",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-CABLE-USBC"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-HEADPHONES-BT",
+      "asin": "B0DUMMY900",
+      "title": "Wireless headphones",
+      "category": "electronics",
+      "visual_description": "Over-ear wireless headphones supplied with a carrying case, a USB charging cable and a manual.",
+      "distinguishing_features": [
+        "over-ear cups",
+        "headband"
+      ],
+      "parts": [
+        {
+          "name": "headphones",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "carrying case",
+          "essential": false,
+          "replaceable": true
+        },
+        {
+          "name": "usb cable",
+          "essential": true,
+          "replaceable": true
+        },
+        {
+          "name": "manual",
+          "essential": false,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-EARPHONES-WIRED"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-EARPHONES-WIRED",
+      "asin": "B0DUMMY910",
+      "title": "Wired in-ear earphones with remote",
+      "category": "electronics",
+      "visual_description": "White wired earbuds (two ear pieces) on a single cable with an in-line remote/microphone and a connector plug at the end.",
+      "distinguishing_features": [
+        "two white earbuds",
+        "in-line remote with volume buttons",
+        "single wired cable, no carrying case"
+      ],
+      "parts": [
+        {
+          "name": "earphones",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-HEADPHONES-BT",
+        "SKU-EARBUDS-TWS"
+      ],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-EARBUDS-TWS",
+      "asin": "B0DUMMY920",
+      "title": "True wireless earbuds with charging case",
+      "category": "electronics",
+      "visual_description": "Two separate wireless in-ear earbuds (no cable between them) that sit in a small pill-shaped flip-lid charging case; may have a silicone protective cover on the case.",
+      "distinguishing_features": [
+        "no wire between the earbuds",
+        "flip-lid charging case",
+        "left and right earbuds look identical in photos - count them, do not try to tell left from right"
+      ],
+      "parts": [
+        {
+          "name": "earbuds (pair of 2)",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "charging case",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-EARPHONES-WIRED"
+      ],
+      "hygiene_sensitive": false,
+      "_hygiene_note": "Ear tips are replaced during refurbishment, so used units are not auto-disposed; wired earphones (non-removable tips) are."
+    },
+    {
+      "sku": "SKU-CHARGER-A",
+      "asin": "B0HOME0001",
+      "title": "Phone charger A - white Samsung (adapter + white USB-C cable)",
+      "category": "electronics_accessories",
+      "visual_description": "All-white Samsung wall charging adapter with a separate white USB-C charging cable.",
+      "distinguishing_features": [
+        "white adapter AND white cable",
+        "Samsung branding on the adapter",
+        "USB-C connector on the cable"
+      ],
+      "parts": [
+        {
+          "name": "adapter",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "cable",
+          "essential": true,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-CHARGER-B"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-CHARGER-B",
+      "asin": "B0HOME0002",
+      "title": "Phone charger B - OPPO (white adapter + black USB-C cable)",
+      "category": "electronics_accessories",
+      "visual_description": "White OPPO wall charging adapter with a separate BLACK USB-C charging cable.",
+      "distinguishing_features": [
+        "white adapter with OPPO branding",
+        "BLACK cable",
+        "USB-C connector on the cable"
+      ],
+      "parts": [
+        {
+          "name": "adapter",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "cable",
+          "essential": true,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-CHARGER-A"
+      ],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-FACEMASK-JAR",
+      "asin": "B0HOME0003",
+      "title": "Face mask in a jar",
+      "category": "beauty",
+      "visual_description": "Cosmetic face mask in a round jar with a screw-on lid.",
+      "distinguishing_features": [
+        "round jar",
+        "screw-on lid"
+      ],
+      "parts": [
+        {
+          "name": "jar",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "lid",
+          "essential": true,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-TONER"
+      ],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-TONER",
+      "asin": "B0HOME0004",
+      "title": "Face toner bottle",
+      "category": "beauty",
+      "visual_description": "Liquid face toner in a bottle with a cap.",
+      "distinguishing_features": [
+        "tall bottle",
+        "cap"
+      ],
+      "parts": [
+        {
+          "name": "bottle",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "cap",
+          "essential": true,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-FACEMASK-JAR",
+        "SKU-PERFUME"
+      ],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-PERFUME",
+      "asin": "B0HOME0005",
+      "title": "Perfume bottle with cap",
+      "category": "beauty",
+      "visual_description": "Glass perfume bottle with a spray nozzle and a removable cap.",
+      "distinguishing_features": [
+        "glass bottle",
+        "spray nozzle",
+        "removable cap"
+      ],
+      "parts": [
+        {
+          "name": "perfume bottle",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "cap",
+          "essential": true,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [
+        "SKU-TONER"
+      ],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-VASE",
+      "asin": "B0HOME0006",
+      "title": "Flower vase",
+      "category": "home_decor",
+      "visual_description": "Decorative flower vase, single piece.",
+      "distinguishing_features": [
+        "single piece vase"
+      ],
+      "parts": [
+        {
+          "name": "vase",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-CLAWCLIP",
+      "asin": "B0HOME0007",
+      "title": "Hair claw clip",
+      "category": "fashion_accessories",
+      "visual_description": "Hair claw clip with interlocking teeth and a spring hinge.",
+      "distinguishing_features": [
+        "claw teeth",
+        "spring hinge"
+      ],
+      "parts": [
+        {
+          "name": "clip",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-POUCH-BLK",
+      "asin": "B0HOME0008",
+      "title": "Black pouch",
+      "category": "fashion_accessories",
+      "visual_description": "Black zip pouch / small bag.",
+      "distinguishing_features": [
+        "black colour",
+        "zip closure"
+      ],
+      "parts": [
+        {
+          "name": "pouch",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-COMB",
+      "asin": "B0HOME0009",
+      "title": "Comb",
+      "category": "personal_care",
+      "visual_description": "Hair comb.",
+      "distinguishing_features": [
+        "row of teeth"
+      ],
+      "parts": [
+        {
+          "name": "comb",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": true
+    },
+    {
+      "sku": "SKU-SOFTTOY",
+      "asin": "B0HOME0010",
+      "title": "Soft toy",
+      "category": "toys",
+      "visual_description": "Plush soft toy.",
+      "distinguishing_features": [
+        "plush fabric"
+      ],
+      "parts": [
+        {
+          "name": "soft toy",
+          "essential": true,
+          "replaceable": false
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    },
+    {
+      "sku": "SKU-WATERBOTTLE-FLIP",
+      "asin": "B0HOME0011",
+      "title": "Water bottle with flip lid",
+      "category": "kitchen",
+      "visual_description": "Frosted plastic water bottle with a teal-to-orange gradient and printed time markers (e.g. 'GREAT START'), with a teal flip-top lid that has a carry loop.",
+      "distinguishing_features": [
+        "teal-to-orange gradient",
+        "printed motivational time markers",
+        "teal flip-top lid with loop"
+      ],
+      "parts": [
+        {
+          "name": "bottle",
+          "essential": true,
+          "replaceable": false
+        },
+        {
+          "name": "lid",
+          "essential": true,
+          "replaceable": true
+        }
+      ],
+      "lookalike_skus": [],
+      "hygiene_sensitive": false
+    }
+  ]
+}

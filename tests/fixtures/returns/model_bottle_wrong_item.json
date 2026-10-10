@@ -1,0 +1,64 @@
+{
+ "_note": "Recorded Gemini response for a real return photo (Round 2 evaluation cache). Used to test the adapter without an API key.",
+ "model_version": "gemini-3.5-flash-lite",
+ "raw": {
+  "image_quality": [
+   {
+    "image_index": 0,
+    "usable": true
+   }
+  ],
+  "identity": {
+   "verdict": "MISMATCH",
+   "observed_product": "skincare bottle (Ginseng Essence Water)",
+   "confidence": 1.0,
+   "evidence": [
+    {
+     "image_index": 0,
+     "observation": "The image shows a cylindrical skincare bottle with Korean text and 'Ginseng Essence Water' label instead of a water bottle with motivational time markers and gradient."
+    }
+   ],
+   "best_matching_sku": "",
+   "visible_identifiers": [
+    "Ginseng Essence Water"
+   ]
+  },
+  "components": [
+   {
+    "part": "bottle",
+    "status": "ABSENT",
+    "confidence": 1.0,
+    "evidence": [
+     {
+      "image_index": 0,
+      "observation": "The expected water bottle is completely absent; a skincare bottle is present instead."
+     }
+    ]
+   },
+   {
+    "part": "lid",
+    "status": "ABSENT",
+    "confidence": 1.0,
+    "evidence": [
+     {
+      "image_index": 0,
+      "observation": "The expected teal flip-top lid is completely absent."
+     }
+    ]
+   }
+  ],
+  "observed_state": "uncertain",
+  "damage": [],
+  "condition": {
+   "grade": "UNCERTAIN",
+   "confidence": 1.0,
+   "rationale": "The item received is a completely different product (mismatch identity), so grading its condition against the ordered product is not applicable.",
+   "evidence": [
+    {
+     "image_index": 0,
+     "observation": "Completely wrong product received."
+    }
+   ]
+  }
+ }
+}

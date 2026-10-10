@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cube-round3-pod-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scripts/serve_all.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: ORCH_MODE
+        value: http
+      - key: GROQ_API_KEY
+        sync: false

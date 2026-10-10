@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pack Manager AI Station — Intelligent Packaging & Box Verification</title>
+  <meta name="description" content="AI Vision inspection station for warehouse packing: verify order items, quantities, and dunnage before sealing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+  <!-- Ambient Sky Blue Mesh Blobs -->
+  <div class="bg-ambient">
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+  </div>
+
+  <div class="container">
+    
+    <!-- Top Navigation Bar -->
+    <header class="header-bar">
+      <div class="brand-wrapper">
+        <div class="brand-logo">📦</div>
+        <div class="brand-title">
+          <h1>Pack Manager Station</h1>
+          <p>AI Visual Box & Order Verification</p>
+        </div>
+      </div>
+
+      <div class="header-status-pill">
+        <span class="pulse-indicator"></span>
+        <span>Neural Vision Active (Port :8103)</span>
+      </div>
+
+      <nav class="header-nav">
+        <a href="http://127.0.0.1:8100/" target="_blank" class="nav-btn" title="Open Multi-Agent Control Center">
+          <span>🌐 Control Center (:8100)</span>
+        </a>
+        <a href="/docs" target="_blank" class="nav-btn" title="FastAPI Swagger Documentation">
+          <span>📜 API Docs</span>
+        </a>
+        <button id="reset-station-btn" class="nav-btn" style="cursor:pointer;">
+          <span>🔄 Reset Station</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main 2-Column Inspection Grid -->
+    <main class="main-grid">
+
+      <!-- LEFT COLUMN: Expected Order + Package Capture -->
+      <section class="card-panel">
+        
+        <!-- Part 1: Expected Order -->
+        <div class="section-head">
+          <h2 class="section-title">
+            <span>1.</span> Expected Order Manifest
+          </h2>
+          <button id="scan-barcode-btn" class="btn-secondary" style="padding:6px 14px;font-size:0.78rem;">
+            <span>📷 Scan Barcode</span>
+          </button>
+        </div>
+        <p class="section-subtitle">Define required order SKUs from WMS or scan carton packing slip.</p>
+
+        <!-- Quick Preset Orders -->
+        <div class="order-presets-bar">
+          <span class="preset-label">Quick Order Presets:</span>
+          <div class="preset-chips">
+            <button class="chip-btn active" data-preset="1">Order #1: Blue Towel (1)</button>
+            <button class="chip-btn" data-preset="2">Order #2: Sport Shoes (1) + Socks (2)</button>
+            <button class="chip-btn" data-preset="3">Order #3: Smart Watch (1) + Band (1)</button>
+            <button class="chip-btn" data-preset="4">Order #4: Coffee Mug (2)</button>
+          </div>
+        </div>
+
+        <!-- Barcode Reader Camera Container (Hidden until toggled) -->
+        <div id="barcode-reader-box" style="display:none;margin-bottom:16px;">
+          <div id="reader" style="width:100%;"></div>
+        </div>
+
+        <!-- Editable Order Lines List -->
+        <div class="order-items-container" id="order-lines-list">
+          <div class="order-row">
+            <input type="text" class="input-field sku-input" placeholder="e.g. BLUE-TOWEL" value="BLUE-TOWEL">
+            <input type="number" class="input-field qty-input" value="1" min="1" placeholder="Qty">
+            <button class="delete-row-btn" title="Remove line">✕</button>
+          </div>
+        </div>
+
+        <!-- Order Actions -->
+        <div class="order-actions-bar">
+          <button id="add-item-btn" class="btn-secondary">
+            <span>+ Add SKU Item</span>
+          </button>
+          <button id="clear-order-btn" class="btn-secondary" style="color:var(--text-muted);border-color:var(--border-subtle);">
+            <span>Clear Items</span>
+          </button>
+        </div>
+
+        <!-- Part 2: Package Capture -->
+        <div class="capture-divider">
+          <div class="section-head">
+            <h2 class="section-title">
+              <span>2.</span> Package Imaging & Capture
+            </h2>
+            <button id="camera-toggle-btn" class="btn-secondary" style="padding:6px 14px;font-size:0.78rem;">
+              <span>🎥 Live Camera</span>
+            </button>
+          </div>
+          <p class="section-subtitle">Capture an optical photo of the open carton before applying tape.</p>
+
+          <!-- 1-Click Test Samples -->
+          <div class="sample-buttons-row">
+            <span class="preset-label" style="width:100%;margin-bottom:4px;">1-Click Test Packages:</span>
+            <button class="sample-btn" data-sample="clean">📦 Clean Box (Pass)</button>
+            <button class="sample-btn" data-sample="missing">⚠️ Missing Item Box</button>
+            <button class="sample-btn" data-sample="extra">➕ Extra Item Box</button>
+            <button class="sample-btn" data-sample="blurry">🌫️ Blurry / Occluded</button>
+          </div>
+
+          <!-- Dropzone & Preview Box -->
+          <div class="upload-dropzone" id="upload-dropzone">
+            <input type="file" id="image-file-input" accept="image/*" hidden>
+
+            <!-- Default Placeholder -->
+            <div class="upload-placeholder-content" id="upload-placeholder">
+              <div class="upload-icon-circle">📷</div>
+              <div class="upload-text-main">Drop Carton Photo Here or Click to Browse</div>
+              <div class="upload-text-sub">Supports JPG, PNG, WEBP from packing station camera</div>
+            </div>
+
+            <!-- Preview Image with Laser FX -->
+            <div class="preview-container" id="preview-container">
+              <img id="preview-image" class="preview-img" src="" alt="Package Preview">
+              <div class="laser-scanner-line" id="laser-line"></div>
+            </div>
+
+            <!-- Video Camera Stream Element -->
+            <video id="camera-stream-video" autoplay playsinline></video>
+
+            <!-- Live Camera Snapshot Control -->
+            <div class="camera-controls-overlay" id="camera-controls">
+              <button id="snap-photo-btn" class="btn-secondary" style="background:#ffffff;box-shadow:0 4px 14px rgba(0,0,0,0.25);">
+                <span>📸 Capture Snapshot</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verification Action Button -->
+        <button id="run-verify-btn" class="btn-verify-main">
+          <span>⚡ Run AI Package Verification</span>
+        </button>
+
+      </section>
+
+      <!-- RIGHT COLUMN: AI Verification Result & Insights -->
+      <section class="card-panel">
+        
+        <div class="section-head">
+          <h2 class="section-title">
+            <span>3.</span> Inspection Verdict & Insights
+          </h2>
+          <span style="font-size:0.8rem;font-weight:700;color:var(--sky-blue-deep);" id="inspection-id-badge">ID: PCK-READY</span>
+        </div>
+        <p class="section-subtitle">Real-time computer vision analysis against WMS packing rules.</p>
+
+        <!-- State 1: Awaiting Input (Placeholder) -->
+        <div class="empty-placeholder" id="placeholder-box">
+          <div class="empty-icon">🤖</div>
+          <h3>Awaiting Package Capture</h3>
+          <p>Define an expected order and upload or capture an image on the left, then click <strong>Run AI Package Verification</strong>.</p>
+        </div>
+
+        <!-- State 2: Active Neural Processing -->
+        <div class="loading-box" id="loading-box">
+          <div class="spinner-dual-ring"></div>
+          <h3 style="color:var(--blue-solid-dark);font-size:1.15rem;font-weight:800;">Neural Vision Engine Analyzing...</h3>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin-top:4px;">Performing multi-layer classification and SKU count</p>
+
+          <div class="inspection-steps-list">
+            <div class="step-item active" id="step-1">
+              <span>🔍</span> 1. Carton Segmentation & Object Detection
+            </div>
+            <div class="step-item" id="step-2">
+              <span>🏷️</span> 2. SKU Barcode & Text OCR Cross-Referencing
+            </div>
+            <div class="step-item" id="step-3">
+              <span>📦</span> 3. Dunnage & Carton Dimension Inspection
+            </div>
+            <div class="step-item" id="step-4">
+              <span>⚖️</span> 4. Final Seal vs Stop & Fix Determination
+            </div>
+          </div>
+        </div>
+
+        <!-- State 3: Final Results View -->
+        <div class="results-box" id="results-box">
+          
+          <!-- Large Verdict Banner -->
+          <div class="verdict-banner-card banner-seal" id="verdict-banner">
+            <div class="verdict-header-row">
+              <span class="verdict-badge-large" id="verdict-title">
+                <span id="verdict-icon">✅</span> <span id="verdict-text">SEAL</span>
+              </span>
+              <span style="font-size:0.8rem;font-weight:700;color:var(--text-muted);" id="channel-tag">CHANNEL: FULFILLMENT</span>
+            </div>
+            
+            <p class="verdict-reason-text" id="verdict-reason">
+              All package items and counts match the expected order manifest. Carton is ready to seal and ship.
+            </p>
+
+            <!-- AI Confidence Gauge -->
+            <div class="confidence-gauge-box">
+              <div class="gauge-head">
+                <span>AI Visual Confidence Score</span>
+                <span id="confidence-score-num">98%</span>
+              </div>
+              <div class="gauge-track">
+                <div class="gauge-fill" id="confidence-bar-fill" style="width:98%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Split Details: Detected vs Issues -->
+          <div class="details-split-grid">
+            
+            <!-- Detected Items Card -->
+            <div class="detail-subcard">
+              <h4><span>🔎</span> Detected Items</h4>
+              <ul class="items-pills-list" id="detected-items-list">
+                <!-- Injected via JS -->
+              </ul>
+            </div>
+
+            <!-- Issues & Flags Card -->
+            <div class="detail-subcard" style="border-color:rgba(220, 38, 38, 0.2);">
+              <h4><span>⚠️</span> Discrepancies</h4>
+              <ul class="items-pills-list" id="issues-items-list">
+                <!-- Injected via JS -->
+              </ul>
+            </div>
+
+          </div>
+
+          <!-- Cryptographic Evidence Record Box -->
+          <div class="evidence-chain-card">
+            <div class="rec-hash-info">
+              <span class="rec-title">Signed Evidence Record</span>
+              <span class="rec-val" id="evidence-rec-id">PCK-ORDER-VERIFIED</span>
+            </div>
+            <button id="view-evidence-btn" class="btn-secondary" style="padding:7px 14px;font-size:0.8rem;">
+              <span>📄 View Evidence JSON</span>
+            </button>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Feature Highlights Strip -->
+    <footer class="features-highlight-grid">
+      <div class="feature-pill-card">
+        <div class="feat-icon-box">🔍</div>
+        <div class="feat-text-box">
+          <h5>Sub-Millimeter OCR</h5>
+          <p>Instant barcode & packaging label detection</p>
+        </div>
+      </div>
+
+      <div class="feature-pill-card">
+        <div class="feat-icon-box">🛡️</div>
+        <div class="feat-text-box">
+          <h5>Zero Shrinkage</h5>
+          <p>Guaranteed check before carton tape sealing</p>
+        </div>
+      </div>
+
+      <div class="feature-pill-card">
+        <div class="feat-icon-box">⚡</div>
+        <div class="feat-text-box">
+          <h5>Contract v1.0 Ready</h5>
+          <p>Signed cryptographic evidence chain integration</p>
+        </div>
+      </div>
+
+      <div class="feature-pill-card">
+        <div class="feat-icon-box">🤖</div>
+        <div class="feat-text-box">
+          <h5>Gemini Vision Neural</h5>
+          <p>Multimodal optical inspection powered by AI</p>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Evidence JSON Modal -->
+  <div class="modal-overlay" id="evidence-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Contract Evidence Record: Pack Manager</h3>
+        <button class="modal-close-btn" id="modal-close-btn">✕</button>
+      </div>
+      <div class="modal-content">
+        <pre class="json-viewer" id="evidence-json-content"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/script.js"></script>
+</body>
+</html>

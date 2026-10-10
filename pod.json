@@ -1,0 +1,34 @@
+{
+  "pod_id": "pod-13",
+  "pod_type": "standard",
+  "flow": "orchestration/flow.json",
+  "members": [
+    {
+      "role": "Receiving Manager",
+      "agent": "receiving",
+      "github": "Bhargav200"
+    },
+    {
+      "role": "Prep Manager",
+      "agent": "prep",
+      "github": "dheerajchandra28"
+    },
+    {
+      "role": "Pack Manager",
+      "agent": "pack",
+      "github": "HarshKumar5822"
+    },
+    {
+      "role": "Returns Manager",
+      "agent": "returns",
+      "github": "klu-2200031174"
+    },
+    {
+      "role": "Recovery Manager",
+      "agent": "recovery",
+      "github": "Keerthanreddy01"
+    }
+  ],
+  "notes": "Fill this in together in your first session: pod_id, each member's GitHub handle, and an orchestration coordinator (a coordinator, not an owner: the Pod owns the orchestration jointly). SPECIALIST PODS (no Prep Manager): set pod_type to \"specialist\", flow to \"orchestration/flow.specialist.json\", and replace the Prep member with {\"role\": \"Specialist / Integration Engineer\", \"agent\": null, \"github\": \"\"}.",
+  "orchestration_coordinator": ""
+}
