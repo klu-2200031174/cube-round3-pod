@@ -4,15 +4,15 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://cube-round3-pod-backend.onrender.com/api/:match*"
+      "destination": "https://cube-round3-pod-pb6w.onrender.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://cube-round3-pod-backend.onrender.com/health"
+      "destination": "https://cube-round3-pod-pb6w.onrender.com/health"
     },
     {
       "source": "/workflows/:match*",
-      "destination": "https://cube-round3-pod-backend.onrender.com/workflows/:match*"
+      "destination": "https://cube-round3-pod-pb6w.onrender.com/workflows/:match*"
     }
   ]
 }
