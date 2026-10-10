@@ -804,9 +804,14 @@ async function runModal(done) {
       return matchFilter && matchSearch;
     });
 
-    listContainer.replaceChildren(
-      filtered.length === 0 ? h("div", { style: "padding:24px;text-align:center;color:var(--mute);font-size:13px;" }, "No matching inventory units found.") :
-      filtered.map(u => {
+    if (filtered.length === 0) {
+      listContainer.replaceChildren(
+        h("div", { style: "padding:24px;text-align:center;color:var(--mute);font-size:13px;" }, "No matching inventory units found.")
+      );
+      return;
+    }
+
+    const items = filtered.map(u => {
         const val = u.org_id + "|" + u.unit_id;
         const isSelected = selectedUnit === val;
         const item = h("div", {
@@ -833,8 +838,9 @@ async function runModal(done) {
           )
         );
         return item;
-      })
-    );
+      });
+
+    listContainer.replaceChildren(...items);
   };
 
   filters.forEach(([key, label]) => {
