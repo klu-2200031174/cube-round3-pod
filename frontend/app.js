@@ -11,7 +11,21 @@ function h(tag, attrs, ...kids) {
 }
 const badge = (t) => h("span", { class: "badge " + String(t).replace(/[^A-Za-z_]/g, "") + (t === "STOP & FIX" ? " STOP" : "") }, t ?? "—");
 const money = (n) => "$" + Number(n || 0).toFixed(2);
-const show = (v) => v == null ? "—" : typeof v === "object" ? JSON.stringify(v) : String(v);
+const show = (v) => {
+  if (v == null) return "—";
+  if (typeof v === "boolean") return v ? "YES" : "NO";
+  if (typeof v === "object") {
+    if (Array.isArray(v)) return v.join(", ");
+    const entries = Object.entries(v);
+    if (entries.length === 0) return "—";
+    const vals = Array.from(new Set(entries.map(e => e[1])));
+    if (vals.length === 1 && typeof vals[0] === "string") {
+      return vals[0];
+    }
+    return entries.map(([k, val]) => `${k.replace(/_/g, " ")}: ${val}`).join(" · ");
+  }
+  return String(v);
+};
 function toast(m) { const t = h("div", { class: "toast" }, m); document.body.append(t); setTimeout(() => t.remove(), 4200); }
 function getApiBase() {
   if (window.CUBE_API_BASE) return window.CUBE_API_BASE.replace(/\/+$/, "");
@@ -103,10 +117,20 @@ function chart(parent, cfg, tall) {
   return box;
 }
 const empty = (p, m = "No data yet — run an agent first.") => p.append(h("p", { class: "mute" }, m));
-function doughnut(p, obj, colors, type = "doughnut") {
+function doughnut(p, obj, colors, type = "doughnut", opts = {}) {
   const k = Object.keys(obj);
   if (!k.length) return empty(p);
-  chart(p, { type, data: { labels: k, datasets: [{ data: k.map((x) => obj[x]), backgroundColor: k.map((x, i) => (colors && colors[x]) || SAAS_PALETTE[i % SAAS_PALETTE.length]) }] } });
+  chart(p, {
+    type,
+    data: {
+      labels: k,
+      datasets: [{
+        data: k.map((x) => obj[x]),
+        backgroundColor: k.map((x, i) => (colors && colors[x]) || SAAS_PALETTE[i % SAAS_PALETTE.length])
+      }]
+    },
+    options: opts
+  });
 }
 function bar(p, labels, sets, opts = {}) {
   if (!labels.length) return empty(p);
@@ -152,10 +176,58 @@ function renderEvidence(e, into) {
   ));
   if (e.error) into.append(h("div", { class: "note warn" }, "⚠ " + e.error.code + ": " + e.error.message));
 
-  // Table of checks
+  // 1. Executive Summary & Verdict Breakdown Card
+  const mix = {};
+  e.checks.forEach((c) => (mix[c.verdict] = (mix[c.verdict] || 0) + 1));
+  const passCount = mix.PASS || 0;
+  const failCount = mix.FAIL || 0;
+  const uncCount = mix.UNCERTAIN || 0;
+  const total = passCount + failCount + uncCount;
+  const passRate = total > 0 ? Math.round((passCount / total) * 100) : 0;
+
+  const chartBox = h("div", { class: "evidence-doughnut-box" });
+
+  const summaryCard = h("div", { class: "card evidence-summary-card", style: "margin-bottom:18px;" },
+    h("div", { class: "evidence-summary-header" },
+      h("div", {},
+        h("h3", { style: "margin:0 0 4px;font-size:15px;color:var(--ink);" }, "Verdict & Compliance Breakdown"),
+        h("p", { class: "mute", style: "margin:0;font-size:12px;" },
+          total + " checks evaluated across " + (e.stage ? e.stage.toUpperCase() : "workflow") + " inspection rubrics."
+        )
+      ),
+      h("div", { class: "verdict-pass-rate-pill" + (passRate === 100 ? " pass" : passRate > 50 ? " partial" : " fail") },
+        h("span", { class: "val" }, passRate + "%"),
+        h("span", { class: "lbl" }, "PASS RATE")
+      )
+    ),
+    h("div", { class: "evidence-metrics-strip" },
+      h("div", { class: "evidence-metric-item pass" },
+        h("div", { class: "metric-val" }, passCount),
+        h("div", { class: "metric-lbl" }, "CHECKS PASSED")
+      ),
+      h("div", { class: "evidence-metric-item fail" },
+        h("div", { class: "metric-val" }, failCount),
+        h("div", { class: "metric-lbl" }, "CHECKS FAILED")
+      ),
+      h("div", { class: "evidence-metric-item unc" },
+        h("div", { class: "metric-val" }, uncCount),
+        h("div", { class: "metric-lbl" }, "AWAITING HUMAN REVIEW")
+      ),
+      h("div", { class: "evidence-metric-item chart-item" },
+        chartBox
+      )
+    )
+  );
+
+  into.append(summaryCard);
+
+  // Render doughnut chart in mini box (without legend to avoid overflow)
+  doughnut(chartBox, mix, VC, "doughnut", { plugins: { legend: { display: false } } });
+
+  // 2. Inspection Checks Audit Table (Full width!)
   const t = h("table", { class: "evidence-checks-table" },
     h("thead", {},
-      h("tr", {}, ["Check", "Verdict", "Expected", "Observed", "Conf.", "Detail / Evidence"].map((x) => h("th", {}, x)))
+      h("tr", {}, ["Check", "Verdict", "Expected Rule", "Observed Reality", "Conf.", "Detail & Evidence"].map((x) => h("th", {}, x)))
     ),
     h("tbody", {},
       e.checks.map(c => {
@@ -170,9 +242,9 @@ function renderEvidence(e, into) {
         return h("tr", {},
           h("td", { class: "check-key-cell" }, c.check_key),
           h("td", {}, badge(c.verdict)),
-          h("td", { class: "mono" }, show(c.expected)),
-          h("td", { class: "mono" }, show(c.observed)),
-          h("td", {}, c.confidence != null ? Math.round(c.confidence * 100) + "%" : "—"),
+          h("td", { style: "font-size:12px;line-height:1.45;color:var(--mute);max-width:240px;" }, show(c.expected)),
+          h("td", { style: "font-size:12px;line-height:1.45;color:var(--ink);max-width:240px;font-weight:500;" }, show(c.observed)),
+          h("td", { style: "font-size:11.5px;font-family:var(--font-mono);white-space:nowrap;" }, c.confidence != null ? Math.round(c.confidence * 100) + "%" : "—"),
           h("td", { class: "detail-cell" },
             c.detail || c.uncertain_reason ? h("div", {}, c.detail || c.uncertain_reason) : null,
             chips
@@ -182,47 +254,15 @@ function renderEvidence(e, into) {
     )
   );
 
-  const row = h("div", { class: "evidence-results-grid" });
-  const left = h("div", { class: "card", style: "margin:0;" },
-    h("h3", {}, "Inspection Results · Expected vs Observed"),
-    h("div", { class: "scroll" }, t)
-  );
-
-  const mix = {};
-  e.checks.forEach((c) => (mix[c.verdict] = (mix[c.verdict] || 0) + 1));
-  const passCount = mix.PASS || 0;
-  const failCount = mix.FAIL || 0;
-  const uncCount = mix.UNCERTAIN || 0;
-  const total = passCount + failCount + uncCount;
-  const passRate = total > 0 ? Math.round((passCount / total) * 100) : 0;
-
-  const right = h("div", { class: "card verdict-summary-card", style: "margin:0;" },
-    h("h3", {}, "Verdict Breakdown"),
-    h("div", { class: "verdict-metrics-row" },
-      h("div", { class: "verdict-metric-pill pass" },
-        h("span", { class: "val" }, passCount),
-        h("span", { class: "lbl" }, "PASS")
-      ),
-      h("div", { class: "verdict-metric-pill fail" },
-        h("span", { class: "val" }, failCount),
-        h("span", { class: "lbl" }, "FAIL")
-      ),
-      uncCount > 0 ? h("div", { class: "verdict-metric-pill unc" },
-        h("span", { class: "val" }, uncCount),
-        h("span", { class: "lbl" }, "REVIEW")
-      ) : null,
-      h("div", { class: "verdict-metric-pill rate" },
-        h("span", { class: "val" }, passRate + "%"),
-        h("span", { class: "lbl" }, "PASS RATE")
-      )
+  const checksCard = h("div", { class: "card", style: "margin-bottom:18px;" },
+    h("div", { style: "display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;" },
+      h("h3", { style: "margin:0;" }, "Inspection Checks & Criteria"),
+      h("span", { class: "mute", style: "font-size:12px;" }, e.checks.length + " criteria evaluated")
     ),
-    h("div", { class: "verdict-chart-wrap" })
+    h("div", { class: "scroll", style: "max-height:560px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;" }, t)
   );
 
-  row.append(left, right);
-  into.append(row);
-
-  doughnut(right.querySelector(".verdict-chart-wrap"), mix, VC);
+  into.append(checksCard);
 
   if (e.stage === "pack" && e.payload.lines) {
     const c = h("div", { class: "card" }, h("h3", {}, "Order vs detected items")); const tb = h("table", {}, h("tr", {}, ["Ordered", "Expected qty", "Observed qty", "Status", "Detail"].map((x) => h("th", {}, x))));

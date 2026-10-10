@@ -3069,3 +3069,178 @@ aside.collapsed .nav-section-title {
   gap: 8px;
   flex-shrink: 0;
 }
+
+
+/* Evidence Dossier Executive Summary */
+.evidence-summary-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+.evidence-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.verdict-pass-rate-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+
+.verdict-pass-rate-pill .val {
+  font-size: 15px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+}
+
+.verdict-pass-rate-pill .lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mute);
+}
+
+.verdict-pass-rate-pill.pass .val { color: #10b981; }
+.verdict-pass-rate-pill.partial .val { color: #f59e0b; }
+.verdict-pass-rate-pill.fail .val { color: #ef4444; }
+
+.evidence-metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) 110px;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .evidence-metrics-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .evidence-metrics-strip .chart-item {
+    display: none;
+  }
+}
+
+.evidence-metric-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.evidence-metric-item .metric-val {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.evidence-metric-item .metric-lbl {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--mute);
+}
+
+.evidence-metric-item.pass {
+  border-left: 3px solid #10b981;
+}
+.evidence-metric-item.pass .metric-val {
+  color: #10b981;
+}
+
+.evidence-metric-item.fail {
+  border-left: 3px solid #ef4444;
+}
+.evidence-metric-item.fail .metric-val {
+  color: #ef4444;
+}
+
+.evidence-metric-item.unc {
+  border-left: 3px solid #f59e0b;
+}
+.evidence-metric-item.unc .metric-val {
+  color: #f59e0b;
+}
+
+.evidence-metric-item.chart-item {
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--border);
+}
+
+.evidence-doughnut-box {
+  width: 90px;
+  height: 90px;
+  position: relative;
+}
+
+.evidence-doughnut-box .chart {
+  width: 90px !important;
+  height: 90px !important;
+  margin: 0 !important;
+}
+
+/* Evidence Checks Table */
+.evidence-checks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.evidence-checks-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 5;
+  box-shadow: 0 1px 0 var(--border);
+  padding: 10px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+  color: var(--mute);
+  white-space: nowrap;
+}
+
+.evidence-checks-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+  font-size: 12.5px;
+}
+
+.evidence-checks-table tbody tr:hover {
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.evidence-checks-table td.check-key-cell {
+  font-weight: 700;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.evidence-checks-table td.detail-cell {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
