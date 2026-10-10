@@ -32,7 +32,39 @@ const VC = { PASS: "#10b981", FAIL: "#ef4444", UNCERTAIN: "#f59e0b" };
 const charts = [];
 function chart(parent, cfg, tall) {
   const box = h("div", { class: "chart" + (tall ? " tall" : "") }), cv = h("canvas"); box.append(cv); parent.append(box);
-  cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }, cfg.options || {});
+  cfg.options = Object.assign({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: {
+          usePointStyle: true,
+          pointStyle: "circle",
+          boxWidth: 6,
+          padding: 12,
+          font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 },
+          color: "#475569"
+        }
+      },
+      tooltip: {
+        backgroundColor: "#0f172a",
+        padding: 10,
+        cornerRadius: 6,
+        bodyFont: { family: "'Plus Jakarta Sans', sans-serif", size: 12 },
+        titleFont: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: 700 }
+      }
+    }
+  }, cfg.options || {});
+
+  if (cfg.type === "doughnut" || cfg.type === "pie") {
+    cfg.options.cutout = cfg.options.cutout || "72%";
+    (cfg.data.datasets || []).forEach(ds => {
+      ds.borderRadius = ds.borderRadius || 4;
+      ds.borderWidth = ds.borderWidth || 2;
+      ds.borderColor = ds.borderColor || "#ffffff";
+    });
+  }
   charts.push(new Chart(cv, cfg)); return box;
 }
 const empty = (p, m = "No data yet — run an agent first.") => p.append(h("p", { class: "mute" }, m));
@@ -70,16 +102,92 @@ const HEAD = { receiving: (e) => ({ v: e.decision.verdict, t: { accept: "ACCEPT"
 function renderEvidence(e, into) {
   const hd = (HEAD[e.stage] || ((x) => ({ v: x.decision.verdict, t: x.decision.outcome })))(e);
   const conf = e.decision.confidence;
-  into.append(h("div", { class: "banner " + hd.v }, h("div", {}, h("h3", {}, hd.t), h("p", {}, e.decision.reason)),
-    h("div", { style: "margin-left:auto;text-align:right" }, h("div", {}, "Record ", h("b", {}, e.record_id)), h("div", {}, conf != null ? "confidence " + Math.round(conf * 100) + "%" : "confidence n/a"),
-      h("div", {}, "model: " + (e.model.name || "—")), e.decision.needs_human ? h("div", {}, "👤 needs a person") : null)));
+  into.append(h("div", { class: "banner " + hd.v },
+    h("div", {},
+      h("h3", {}, hd.t),
+      h("p", {}, e.decision.reason)
+    ),
+    h("div", { class: "banner-meta" },
+      h("div", {}, "Record ", h("b", {}, e.record_id)),
+      h("div", {}, conf != null ? "confidence " + Math.round(conf * 100) + "%" : "confidence n/a"),
+      h("div", {}, "model: " + (e.model.name || "—")),
+      e.decision.needs_human ? h("div", { style: "color:var(--unc);font-weight:700;margin-top:2px;" }, "👤 Needs Human Review") : null
+    )
+  ));
   if (e.error) into.append(h("div", { class: "note warn" }, "⚠ " + e.error.code + ": " + e.error.message));
-  const row = h("div", { class: "grid g2" }); const left = h("div", { class: "card" }, h("h3", {}, "Inspection results — expected vs observed"));
-  const t = h("table", {}, h("tr", {}, ["Check", "Verdict", "Expected", "Observed", "Conf.", "Detail / evidence"].map((x) => h("th", {}, x))));
-  for (const c of e.checks) t.append(h("tr", {}, h("td", {}, h("b", {}, c.check_key)), h("td", {}, badge(c.verdict)), h("td", { class: "mono" }, show(c.expected)), h("td", { class: "mono" }, show(c.observed)),
-    h("td", {}, c.confidence != null ? Math.round(c.confidence * 100) + "%" : "—"), h("td", {}, c.detail || c.uncertain_reason || "", c.evidence_refs?.length ? h("div", { class: "mute mono" }, "📎 " + c.evidence_refs.join(", ")) : null)));
-  left.append(t); const right = h("div", { class: "card" }, h("h3", {}, "Verdict mix"));
-  const mix = {}; e.checks.forEach((c) => (mix[c.verdict] = (mix[c.verdict] || 0) + 1)); doughnut(right, mix, VC); row.append(left, right); into.append(row);
+
+  // Table of checks
+  const t = h("table", { class: "evidence-checks-table" },
+    h("thead", {},
+      h("tr", {}, ["Check", "Verdict", "Expected", "Observed", "Conf.", "Detail / Evidence"].map((x) => h("th", {}, x)))
+    ),
+    h("tbody", {},
+      e.checks.map(c => {
+        const chips = c.evidence_refs && c.evidence_refs.length ? h("div", { class: "evidence-chips-row" },
+          c.evidence_refs.map(ref => {
+            const fname = ref.split("/").pop();
+            const clean = fname.length > 20 ? fname.slice(0, 10) + "…" + fname.slice(-8) : fname;
+            return h("span", { class: "evidence-chip", title: fname }, "📎 " + clean);
+          })
+        ) : null;
+
+        return h("tr", {},
+          h("td", { class: "check-key-cell" }, c.check_key),
+          h("td", {}, badge(c.verdict)),
+          h("td", { class: "mono" }, show(c.expected)),
+          h("td", { class: "mono" }, show(c.observed)),
+          h("td", {}, c.confidence != null ? Math.round(c.confidence * 100) + "%" : "—"),
+          h("td", { class: "detail-cell" },
+            c.detail || c.uncertain_reason ? h("div", {}, c.detail || c.uncertain_reason) : null,
+            chips
+          )
+        );
+      })
+    )
+  );
+
+  const row = h("div", { class: "evidence-results-grid" });
+  const left = h("div", { class: "card", style: "margin:0;" },
+    h("h3", {}, "Inspection Results · Expected vs Observed"),
+    h("div", { class: "scroll" }, t)
+  );
+
+  const mix = {};
+  e.checks.forEach((c) => (mix[c.verdict] = (mix[c.verdict] || 0) + 1));
+  const passCount = mix.PASS || 0;
+  const failCount = mix.FAIL || 0;
+  const uncCount = mix.UNCERTAIN || 0;
+  const total = passCount + failCount + uncCount;
+  const passRate = total > 0 ? Math.round((passCount / total) * 100) : 0;
+
+  const right = h("div", { class: "card verdict-summary-card", style: "margin:0;" },
+    h("h3", {}, "Verdict Breakdown"),
+    h("div", { class: "verdict-metrics-row" },
+      h("div", { class: "verdict-metric-pill pass" },
+        h("span", { class: "val" }, passCount),
+        h("span", { class: "lbl" }, "PASS")
+      ),
+      h("div", { class: "verdict-metric-pill fail" },
+        h("span", { class: "val" }, failCount),
+        h("span", { class: "lbl" }, "FAIL")
+      ),
+      uncCount > 0 ? h("div", { class: "verdict-metric-pill unc" },
+        h("span", { class: "val" }, uncCount),
+        h("span", { class: "lbl" }, "REVIEW")
+      ) : null,
+      h("div", { class: "verdict-metric-pill rate" },
+        h("span", { class: "val" }, passRate + "%"),
+        h("span", { class: "lbl" }, "PASS RATE")
+      )
+    ),
+    h("div", { class: "verdict-chart-wrap" })
+  );
+
+  row.append(left, right);
+  into.append(row);
+
+  doughnut(right.querySelector(".verdict-chart-wrap"), mix, VC);
+
   if (e.stage === "pack" && e.payload.lines) {
     const c = h("div", { class: "card" }, h("h3", {}, "Order vs detected items")); const tb = h("table", {}, h("tr", {}, ["Ordered", "Expected qty", "Observed qty", "Status", "Detail"].map((x) => h("th", {}, x))));
     e.payload.lines.forEach((l) => tb.append(h("tr", {}, h("td", {}, l.name + (l.colour ? " (" + l.colour + ")" : "")), h("td", {}, l.expected_qty), h("td", {}, l.observed_qty ?? "?"), h("td", {}, badge(l.status === "ok" ? "PASS" : l.status === "uncertain" ? "UNCERTAIN" : "FAIL")), h("td", {}, l.detail))));

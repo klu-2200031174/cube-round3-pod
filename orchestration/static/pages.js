@@ -761,28 +761,113 @@ async function workflows(m) {
 }
 async function runModal(done) {
   const units = await api("/api/units");
-  const sel = h("select", { style: "font-weight:500;" },
-    units.map((u) => h("option", { value: u.org_id + "|" + u.unit_id },
-      `${u.unit_id} · ${u.org_id.replace("org_demo_", "")} (${u.route.toUpperCase()}${u.returned ? " · RETURNED" : ""}) · ${u.title}`
-    ))
-  );
+  let selectedUnit = units[0] ? units[0].org_id + "|" + units[0].unit_id : "";
+  let currentFilter = "ALL";
+  let searchQuery = "";
 
   const msg = h("div", { class: "modal-alert", style: "display:none;" });
   const ov = h("div", { class: "overlay" });
   const close = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) close(); };
 
-  ov.onclick = (e) => {
-    if (e.target === ov) close();
+  const searchInput = h("input", {
+    type: "text",
+    placeholder: "Search by Unit ID, SKU, product title, route...",
+    style: "margin-bottom:10px;font-size:13px;"
+  });
+
+  const filterChips = h("div", { class: "unit-filter-chips", style: "display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;" });
+  const filters = [
+    ["ALL", "All Units (" + units.length + ")"],
+    ["FBA", "FBA"],
+    ["MFN", "MFN"],
+    ["RETURNED", "Returned Only"]
+  ];
+
+  const listContainer = h("div", { class: "unit-picker-scroll-list" });
+
+  const renderList = () => {
+    const q = searchQuery.toLowerCase();
+    const filtered = units.filter(u => {
+      const matchFilter = currentFilter === "ALL" ||
+        (currentFilter === "FBA" && u.route.toLowerCase() === "fba") ||
+        (currentFilter === "MFN" && u.route.toLowerCase() === "mfn") ||
+        (currentFilter === "RETURNED" && u.returned);
+
+      const matchSearch = !q ||
+        u.unit_id.toLowerCase().includes(q) ||
+        (u.sku || "").toLowerCase().includes(q) ||
+        (u.title || "").toLowerCase().includes(q) ||
+        u.route.toLowerCase().includes(q) ||
+        u.org_id.toLowerCase().includes(q);
+
+      return matchFilter && matchSearch;
+    });
+
+    listContainer.replaceChildren(
+      filtered.length === 0 ? h("div", { style: "padding:24px;text-align:center;color:var(--mute);font-size:13px;" }, "No matching inventory units found.") :
+      filtered.map(u => {
+        const val = u.org_id + "|" + u.unit_id;
+        const isSelected = selectedUnit === val;
+        const item = h("div", {
+          class: "unit-picker-card" + (isSelected ? " selected" : ""),
+          onclick: () => {
+            selectedUnit = val;
+            renderList();
+          }
+        },
+          h("div", { class: "unit-picker-card-left" },
+            h("div", { style: "display:flex;align-items:center;gap:8px;margin-bottom:2px;" },
+              h("span", { class: "unit-tag mono" }, u.unit_id),
+              h("span", { class: "unit-title" }, u.title)
+            ),
+            h("div", { class: "unit-sub mute" },
+              h("span", {}, "SKU: " + (u.sku || "—")),
+              h("span", {}, " · Org: " + u.org_id.replace("org_demo_", ""))
+            )
+          ),
+          h("div", { class: "unit-picker-card-right" },
+            h("span", { class: "badge", style: "font-size:11px;" }, u.route.toUpperCase()),
+            u.returned ? h("span", { class: "badge", style: "background:#e0f2fe;color:#0369a1;font-size:11px;" }, "RETURNED") : null,
+            h("span", { class: "unit-select-indicator" }, isSelected ? "✓" : "○")
+          )
+        );
+        return item;
+      })
+    );
   };
+
+  filters.forEach(([key, label]) => {
+    const chip = h("button", {
+      type: "button",
+      class: "chip" + (currentFilter === key ? " on" : ""),
+      style: "font-size:11.5px;padding:4px 10px;",
+      onclick: () => {
+        currentFilter = key;
+        filterChips.querySelectorAll(".chip").forEach(c => c.classList.remove("on"));
+        chip.classList.add("on");
+        renderList();
+      }
+    }, label);
+    filterChips.append(chip);
+  });
+
+  searchInput.oninput = () => {
+    searchQuery = searchInput.value.trim();
+    renderList();
+  };
+
+  renderList();
 
   const go = h("button", {
     class: "btn btn-accent",
-    style: "min-width:150px;",
+    style: "min-width:160px;",
     onclick: async () => {
+      if (!selectedUnit) return;
       go.disabled = true;
       go.innerHTML = '<span class="spin"></span> Dispatching Pipeline…';
       msg.style.display = "none";
-      const [org, unit] = sel.value.split("|");
+      const [org, unit] = selectedUnit.split("|");
       try {
         const r = await api("/workflows", {
           method: "POST",
@@ -801,11 +886,11 @@ async function runModal(done) {
     }
   }, "▶ Launch Workflow");
 
-  const modal = h("div", { class: "modal" },
+  const modal = h("div", { class: "modal", style: "width:min(620px, 96vw);" },
     h("div", { class: "modal-header" },
       h("div", { class: "modal-header-text" },
-        h("h3", { class: "modal-title" }, "Run Commerce Workflow"),
-        h("p", { class: "modal-subtitle" }, "Dispatch multi-agent orchestration for an inventory unit.")
+        h("h3", { class: "modal-title" }, "Launch Commerce Workflow"),
+        h("p", { class: "modal-subtitle" }, "Select an inventory unit to orchestrate through the 5-agent pipeline.")
       ),
       h("button", { class: "modal-close-btn", type: "button", onclick: close, title: "Close" }, "✕")
     ),
@@ -814,7 +899,15 @@ async function runModal(done) {
       h("a", { class: "modal-tab", href: "#live", onclick: close }, "Interactive Custom Pipeline →")
     ),
     h("div", { class: "modal-body" },
-      field("Select Inventory Unit & Fulfillment Route", sel),
+      h("div", { class: "form-field" },
+        h("label", { style: "display:flex;justify-content:space-between;align-items:center;" },
+          h("span", {}, "Select Inventory Unit"),
+          h("span", { class: "mute", style: "font-size:11px;font-weight:400;" }, "Click any card to select")
+        ),
+        searchInput,
+        filterChips,
+        listContainer
+      ),
       msg
     ),
     h("div", { class: "modal-footer" },
