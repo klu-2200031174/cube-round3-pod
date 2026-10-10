@@ -174,14 +174,14 @@ const HEAD = { receiving: (e) => ({ v: e.decision.verdict, t: { accept: "ACCEPT"
   pack: (e) => ({ v: e.decision.verdict, t: e.payload.decision_label || { seal: "SEAL", stop_and_fix: "STOP & FIX", pending_review: "UNCERTAIN" }[e.decision.outcome] }),
   returns: (e) => ({ v: e.decision.verdict, t: "DISPOSITION: " + e.decision.outcome.toUpperCase() }),
   recovery: (e) => ({ v: e.decision.verdict, t: { claim_recommended: "CLAIM RECOMMENDED · " + money(e.payload.claimable_usd), no_claim: "NO CLAIM", insufficient_evidence: "SILENT — insufficient evidence", pending_review: "PENDING" }[e.decision.outcome] }) };
-const formatRoute = (r) => {
+var formatRoute = window.formatRoute = function(r) {
   const s = (r || "").toLowerCase();
   if (s === "fba") return "STANDARD";
   if (s === "mfn") return "MERCHANT";
   return (r || "—").toUpperCase();
 };
 
-const CHECK_LABELS = {
+var CHECK_LABELS = window.CHECK_LABELS = {
   polybag_sealed: "Protective Bag Sealed",
   suffocation_warning: "Safety Warning Present",
   fnsku_label_placement: "Product Label Placement",

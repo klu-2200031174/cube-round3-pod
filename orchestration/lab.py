@@ -288,18 +288,40 @@ async def lab_run(request: Request) -> dict:
     unit = f"LAB-{uuid.uuid4().hex[:8].upper()}"
     now = utcnow()
     stages = list(STAGES[:4]) if stage == "pipeline" else [stage]
-    route, returned = "mfn", False
+    route, returned = "unknown", False
+    pipeline = "standard"
     try:
         if stage == "pipeline":
-            route = data.get("route", "fba")
-            if route not in ("fba", "mfn", "all"):
-                raise HTTPException(422, "route must be fba, mfn or all")
+            raw_route = str(data.get("route") or "").strip().lower()
+            pipeline = str(data.get("pipeline") or "").strip().lower()
+
+            # Separate pipeline selection from fulfilment route
+            if raw_route == "all":
+                pipeline = "all"
+                route = "unknown"
+            elif raw_route in ("fba", "mfn", "unknown"):
+                route = raw_route
+            elif not raw_route:
+                route = "unknown"
+            else:
+                raise HTTPException(422, f"route: '{raw_route}' is not one of ['fba', 'mfn', 'unknown']")
+
+            if not pipeline:
+                pipeline = "all" if raw_route == "all" else ("all" if route == "unknown" else route)
+
             returned = bool(data.get("returns"))
         for st in stages:
             sd = data.get(st) if stage == "pipeline" else data
-            if stage == "pipeline" and (st == "prep" and route not in ("fba", "all") or st == "pack" and route not in ("mfn", "all")
-                                        or st == "returns" and not returned):
-                continue
+            if stage == "pipeline":
+                should_run = True
+                if st == "prep":
+                    should_run = (pipeline == "all") or (route == "fba")
+                elif st == "pack":
+                    should_run = (pipeline == "all") or (route == "mfn")
+                elif st == "returns":
+                    should_run = returned
+                if not should_run:
+                    continue
             if stage == "pipeline" and not sd:
                 raise HTTPException(422, f"the {st} step needs its data")
             _register(st, unit, sd, now)
@@ -327,6 +349,8 @@ async def lab_run(request: Request) -> dict:
         flow = {"flow_id": f"lab-{stage}", "steps": [{"stage": stage}], "defaults": {"timeout_s": 90, "retries": 0}}
     case = {"org_id": LAB_ORG, "unit_id": unit, "route": route if stage == "pipeline" else ("fba" if stage == "prep" else "mfn"),
             "returned": returned if stage == "pipeline" else stage == "returns"}
+    if stage == "pipeline":
+        case["pipeline"] = pipeline
     counts = ((data.get("receiving") or {}).get("counts") if stage == "pipeline" else data.get("counts")) or {}
     if counts:
         case["operator_counts"] = counts

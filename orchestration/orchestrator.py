@@ -75,6 +75,8 @@ def flow_stages(flow: dict | None = None) -> list[str]:
 
 def applies(step: dict, case: dict) -> tuple[bool, str]:
     for key, allowed in step.get("when", {}).items():
+        if key == "route" and case.get("pipeline") == "all":
+            continue
         if case.get(key) not in allowed:
             return False, f"{key}={case.get(key)!r} not in {allowed}"
     return True, ""
@@ -185,10 +187,13 @@ def _run_stage_locked(wf: dict, sr: dict, idx: int, opts: dict, store, client, d
     sr["attempts"], sr["started_at"], sr["error"] = 0, utcnow(), None
     wf["previous_stage"], wf["current_stage"] = wf["current_stage"], stage
     base = f"{wf['workflow_id']}:{stage}"
+    subj_route = wf["context"].get("route")
+    if subj_route not in ("fba", "mfn", "unknown"):
+        subj_route = "unknown"
     request = {
         "schema_version": "1.0", "request_id": base if sr["runs"] == 1 else f"{base}:r{sr['runs']}",
         "workflow_id": wf["workflow_id"], "stage": stage,
-        "subject": {"org_id": wf["org_id"], "subject_id": wf["subject_id"], "route": wf["context"].get("route", "unknown")},
+        "subject": {"org_id": wf["org_id"], "subject_id": wf["subject_id"], "route": subj_route},
         "inputs": discover_inputs(wf["subject_id"], stage),
         "previous_evidence": _previous_evidence(wf, idx, store, deps),
         "context": {"overrides": wf["overrides"], "case": wf["context"]},

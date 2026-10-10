@@ -1,9 +1,3 @@
-const formatRoute = (r) => {
-  const s = (r || "").toLowerCase();
-  if (s === "fba") return "STANDARD";
-  if (s === "mfn") return "MERCHANT";
-  return (r || "—").toUpperCase();
-};
 "use strict";
 // Control-centre pages (Pod 13). Components (h, api, charts, renderEvidence, forms...) come from app.js.
 const CHIPS = ["ALL", "IN_PROGRESS", "BLOCKED", "FAILED", "RECOVERY_REQUIRED", "COMPLETED"];
@@ -1161,23 +1155,57 @@ async function orchestrationPage(m, arg) {
   m.append(h("div", { class: "card" }, h("h3", {}, "Replay a workflow"), h("div", { class: "grid g2" }, field("Workflow", sel), h("div", {}, h("label", {}, "Or run a sample unit now"), h("div", { class: "row" }, uSel, h("label", { class: "chk fix" }, par, "parallel"), h("div", { class: "fix" }, runSample)))), h("div", { style: "margin-top:10px" }, h("button", { onclick: show }, "Show orchestration"))), holder, h("p", { class: "mute" }, "Sample units replay the organiser's CSV and finish in milliseconds, and a unit that was already processed is shown as it ran (evidence is immutable, so it is not re-run). To watch real Groq calls overlap, use Live Run with your own photos."));
   if (rows.length) show();
 }
+function formatUiError(msg) {
+  if (!msg) return "An error occurred during workflow orchestration.";
+  const str = String(msg);
+  if (str.includes("subject/route") || str.includes("route: 'all'")) {
+    return "Invalid Route Configuration: Fulfilment route must be Standard Fulfillment ('fba'), Merchant Fulfillment ('mfn'), or 'unknown'. Running 'All 5 Agents' controls pipeline execution and must not be used as the route identifier.";
+  }
+  if (str.includes("the prep step needs its data")) {
+    return "Prep Manager Specification Missing: Please fill in the preparation work order and requirements.";
+  }
+  if (str.includes("the pack step needs its data")) {
+    return "Pack Manager Order Lines Missing: Please enter at least one item order line for pack census verification.";
+  }
+  if (str.includes("the returns step needs its data")) {
+    return "Returns Manager Product Data Missing: Please enter returned product details and parts.";
+  }
+  if (str.includes("add at least one photo")) {
+    return "Inspection Photos Required: Upload at least one specimen photo; visual inspection models require photo evidence.";
+  }
+  return str;
+}
+
 async function startLive(btn, out, parallel, build) {
   btn.disabled = true; const old = btn.textContent; btn.replaceChildren(h("span", { class: "spin" }), "Orchestrating…");
   try { const fd = build(); fd.append("async", "1"); fd.append("parallel", parallel ? "1" : "0"); const r = await api("/api/lab/run", { method: "POST", body: fd });
     out.replaceChildren(); const results = h("div");
     const panel = orchestrationPanel(r.workflow_id, { onDone: async () => { const b = await api("/workflows/" + encodeURIComponent(r.workflow_id) + "/evidence"); results.replaceChildren(); renderBundle(b, results); btn.disabled = false; btn.textContent = old; refreshStatus(); } });
     out.append(panel, results); panel.scrollIntoView({ behavior: "smooth" });
-  } catch (e) { out.replaceChildren(h("div", { class: "note warn" }, "⚠ " + e.message)); btn.disabled = false; btn.textContent = old; }
+  } catch (e) {
+    const friendly = formatUiError(e.message);
+    out.replaceChildren(h("div", { class: "note warn", style: "border-left:4px solid var(--amber);padding:14px 18px;margin-top:16px;" },
+      h("b", { style: "display:block;margin-bottom:4px;font-size:14px;" }, "Validation or Execution Notice"),
+      h("span", {}, friendly)
+    ));
+    btn.disabled = false;
+    btn.textContent = old;
+  }
 }
 // ---------------------------------------------------------------- live run
 const FEE_TYPES = [["inbound_defect_fee", "inbound defect fee"], ["lost_inbound", "lost inbound"], ["damaged_in_warehouse", "damaged in warehouse"], ["refund_issued_item_not_returned", "refund, item not returned"], ["fulfilment_fee_weight_tier", "fulfilment fee (weight tier)"]];
 async function livePage(m) {
   m.append(h("h2", {}, "Live Run"), h("p", { class: "sub" }, "Process one unit through every agent with your own data and photos. The run uses the real agents and real Groq model calls."));
   const rcv = receivingForm(), prep = prepForm(), pack = packForm(), ret = returnsForm();
-  const route_ = h("select", {},
-    h("option", { value: "all" }, "All 5 Agents (Receiving → Prep → Pack → Returns → Recovery)"),
-    h("option", { value: "fba" }, "Standard Warehouse Fulfillment (Prep)"),
-    h("option", { value: "mfn" }, "Merchant-Fulfilled / Direct Ship (Pack)")
+  const pipelineSel = h("select", {},
+    h("option", { value: "all" }, "All 5 Agents (Full End-to-End Pipeline)"),
+    h("option", { value: "fba" }, "Standard Warehouse Pipeline (Prep Manager)"),
+    h("option", { value: "mfn" }, "Merchant-Fulfilled Pipeline (Pack Manager)")
+  );
+  const routeSel = h("select", {},
+    h("option", { value: "unknown" }, "Unspecified / Unknown Route (context not yet assigned)"),
+    h("option", { value: "fba" }, "Standard Warehouse Fulfillment (fba)"),
+    h("option", { value: "mfn" }, "Merchant-Fulfilled / Direct Ship (mfn)")
   );
   const wantRet = h("input", { type: "checkbox", checked: true });
   const parBox = h("input", { type: "checkbox", checked: true });
@@ -1186,11 +1214,18 @@ async function livePage(m) {
   const packC = step("03", "Pack: open-box check", "Pack Manager · Merchant-fulfilled units", pack.el);
   const retC = step("04", "Returns: returned item", "Returns Manager · customer return inspection", ret.el);
   const sync = () => {
-    prepC.style.display = (route_.value === "fba" || route_.value === "all") ? "" : "none";
-    packC.style.display = (route_.value === "mfn" || route_.value === "all") ? "" : "none";
+    const isAll = pipelineSel.value === "all";
+    prepC.style.display = (isAll || pipelineSel.value === "fba") ? "" : "none";
+    packC.style.display = (isAll || pipelineSel.value === "mfn") ? "" : "none";
     retC.style.display = wantRet.checked ? "" : "none";
   };
-  route_.onchange = wantRet.onchange = sync;
+  pipelineSel.onchange = () => {
+    if (pipelineSel.value === "fba") routeSel.value = "fba";
+    else if (pipelineSel.value === "mfn") routeSel.value = "mfn";
+    else routeSel.value = "unknown";
+    sync();
+  };
+  routeSel.onchange = wantRet.onchange = sync;
   sync();
   const feeBox = h("div");
   const addFee = (t = "inbound_defect_fee", a = "3") => {
@@ -1205,15 +1240,19 @@ async function livePage(m) {
   addFee();
   const out = h("div");
   const btn = h("button", { onclick: () => startLive(btn, out, parBox.checked, () => {
-    const d = { route: route_.value, receiving: rcv.collect() };
+    const d = {
+      pipeline: pipelineSel.value,
+      route: ["fba", "mfn", "unknown"].includes(routeSel.value) ? routeSel.value : "unknown",
+      receiving: rcv.collect()
+    };
     const fd = new FormData();
     fd.append("stage", "pipeline");
     rcv.dz.files.forEach((x) => fd.append("photos_receiving", x.file));
-    if (route_.value === "fba" || route_.value === "all") {
+    if (pipelineSel.value === "all" || pipelineSel.value === "fba") {
       d.prep = prep.collect();
       prep.dz.files.forEach((x) => fd.append("photos_prep", x.file));
     }
-    if (route_.value === "mfn" || route_.value === "all") {
+    if (pipelineSel.value === "all" || pipelineSel.value === "mfn") {
       d.pack = pack.collect();
       pack.dz.files.forEach((x) => fd.append("photos_pack", x.file));
     }
@@ -1234,7 +1273,10 @@ async function livePage(m) {
   m.append(
     step("01", "Receiving: dock inspection", "Receiving Manager", rcv.el),
     h("div", { class: "card" },
-      field("Fulfilment route", route_),
+      h("div", { class: "form-grid g2", style: "margin-bottom:12px;" },
+        field("Pipeline Scope", pipelineSel),
+        field("Shipment Fulfilment Route", routeSel)
+      ),
       h("label", { class: "chk" }, wantRet, "This unit was returned by a customer (enables Returns Manager)")
     ),
     prepC, packC, retC,

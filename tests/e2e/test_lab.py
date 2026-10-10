@@ -207,3 +207,95 @@ def test_async_start_and_live_polling(env):
             break
         time.sleep(0.1)
     assert live["done"] and "running" in seen and live["stages"]["pack"]["state"] == "completed"
+
+
+def test_all_five_agents_pipeline_never_sends_route_all_to_receiving(env):
+    c, fake = env
+    data = {
+        "pipeline": "all",
+        "route": "unknown",
+        "receiving": {
+            "po": {
+                "sku": "SKU-BOTTLE-750",
+                "product_title": "Water Bottle",
+                "spec_colour": "blue",
+                "spec_variant": "750ml",
+                "cartons_ordered": 1,
+                "units_per_carton_ordered": 24
+            }
+        },
+        "prep": {
+            "work_order": {
+                "sku": "SKU-BOTTLE-750",
+                "fnsku": "X00123",
+                "polybag": True,
+                "suffocation_warning": True
+            }
+        },
+        "pack": {
+            "order": [
+                {"name": "Water Bottle", "quantity": 1}
+            ]
+        },
+        "returns": {
+            "product": {
+                "title": "Water Bottle",
+                "parts": ["cap"]
+            }
+        },
+        "fees": [
+            {"charge_type": "inbound_defect_fee", "amount_usd": 3.0}
+        ]
+    }
+    files = [(f"photos_{s}", ("a.jpg", img(), "image/jpeg")) for s in ("receiving", "prep", "pack", "returns")]
+    r = c.post("/api/lab/run", data={"stage": "pipeline", "data": json.dumps(data), "roles": json.dumps({"receiving": ["carton"]})}, files=files)
+    assert r.status_code == 200, r.text
+    evidence = r.json()["evidence"]
+    stages = {e["stage"] for e in evidence.values()}
+    assert {"receiving", "prep", "pack", "returns", "recovery"} <= stages
+    wf = r.json()["workflow"]
+    assert wf["context"]["route"] in ("fba", "mfn", "unknown")
+    assert wf["context"]["route"] == "unknown"
+
+
+def test_legacy_route_all_is_sanitized_to_unknown_and_runs_all_agents(env):
+    c, fake = env
+    data = {
+        "route": "all",
+        "receiving": {
+            "po": {
+                "sku": "SKU-BOTTLE-750",
+                "product_title": "Water Bottle",
+                "spec_colour": "blue",
+                "spec_variant": "750ml",
+                "cartons_ordered": 1,
+                "units_per_carton_ordered": 24
+            }
+        },
+        "prep": {
+            "work_order": {
+                "sku": "SKU-BOTTLE-750",
+                "fnsku": "X00123",
+                "polybag": True,
+                "suffocation_warning": True
+            }
+        },
+        "pack": {
+            "order": [
+                {"name": "Water Bottle", "quantity": 1}
+            ]
+        },
+        "fees": [
+            {"charge_type": "inbound_defect_fee", "amount_usd": 3.0}
+        ]
+    }
+    files = [(f"photos_{s}", ("a.jpg", img(), "image/jpeg")) for s in ("receiving", "prep", "pack")]
+    r = c.post("/api/lab/run", data={"stage": "pipeline", "data": json.dumps(data), "roles": json.dumps({"receiving": ["carton"]})}, files=files)
+    assert r.status_code == 200, r.text
+    evidence = r.json()["evidence"]
+    stages = {e["stage"] for e in evidence.values()}
+    assert {"receiving", "prep", "pack", "recovery"} <= stages
+    wf = r.json()["workflow"]
+    assert wf["context"]["route"] == "unknown"
+    assert wf["context"]["route"] != "all"
+
