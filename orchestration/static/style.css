@@ -2039,7 +2039,7 @@ button.ghost:hover, .btn.ghost:hover {
 }
 
 /* Charts */
-.chart { position: relative; height: 240px; }
+.chart { position: relative; height: 260px; margin-top: 8px; }
 .chart.tall { height: 300px; }
 
 /* Notes & spinners */
@@ -2109,14 +2109,7 @@ button.ghost:hover, .btn.ghost:hover {
 
 
 
-.footbar {
-  margin-top: 36px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-  color: var(--mute);
-  font-size: 12px;
-  font-family: var(--font-mono);
-}
+
 
 /* Orchestration DAG graph */
 .dag { display: flex; align-items: stretch; gap: 0; overflow: auto; padding: 8px 2px; }
@@ -2956,21 +2949,84 @@ aside.collapsed .nav-section-title {
 }
 
 /* Unit Picker Inside Modal */
+
+
+.unit-picker-card.selected .unit-select-indicator {
+  color: #10b981;
+}
+
+
+/* Dedicated Scroll Containers (Prevents any overflow collisions) */
+.scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-width: 100%;
+  position: relative;
+  scrollbar-width: thin;
+}
+
+.scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.btn-sm {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 11.5px !important;
+}
+
+.badge.route-fba { background: #e0f2fe; color: #0369a1; }
+.badge.route-mfn { background: #fef3c7; color: #92400e; }
+
+/* Footbar layout isolation */
+.footbar {
+  margin-top: 36px;
+  padding: 18px 0;
+  border-top: 1px solid var(--border);
+  color: var(--mute);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  clear: both;
+  width: 100%;
+  display: block;
+}
+
+.scroll table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 5;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+
 .unit-picker-scroll-list {
-  max-height: 230px;
+  max-height: 320px;
   overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-md, 8px);
   background: #ffffff;
   display: flex;
   flex-direction: column;
+  scrollbar-width: thin;
 }
 
 .unit-picker-card {
-  padding: 9px 12px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   transition: all 0.12s ease;
@@ -2993,41 +3049,23 @@ aside.collapsed .nav-section-title {
 .unit-picker-card-left {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
 }
 
-.unit-tag {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--cyan);
-  background: var(--cyan-subtle);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.unit-title {
-  font-size: 12.5px;
+.unit-picker-card-left .unit-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-}
-
-.unit-sub {
-  font-size: 11px;
-  color: var(--mute);
 }
 
 .unit-picker-card-right {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.unit-select-indicator {
-  font-size: 14px;
-  font-weight: 700;
-  color: #cbd5e1;
-}
-
-.unit-picker-card.selected .unit-select-indicator {
-  color: #10b981;
+  flex-shrink: 0;
 }

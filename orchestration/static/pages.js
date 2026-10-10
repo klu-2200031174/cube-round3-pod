@@ -927,12 +927,79 @@ async function runModal(done) {
 }
 // ---------------------------------------------------------------- units
 async function unitsPage(m) {
-  const [units, wf] = await Promise.all([api("/api/units"), api("/api/workflow-list")]); const by = Object.fromEntries(wf.map((w) => [w.unit_id + w.org_id, w]));
-  m.append(h("h2", {}, "Units"), h("p", { class: "sub" }, "Every inventory unit in the pod, with its route and latest workflow state.")); const q = inp("", "text", "Filter by unit, SKU, org…"); const body = h("tbody");
-  const draw = () => body.replaceChildren(...units.filter((u) => (u.unit_id + u.sku + u.org_id + u.title).toLowerCase().includes(q.value.toLowerCase())).map((u) => { const w = by[u.unit_id + u.org_id];
-    return h("tr", {}, h("td", { class: "mono" }, u.unit_id), h("td", {}, u.org_id.replace("org_demo_", "")), h("td", {}, u.title, h("div", { class: "mute mono" }, u.sku)), h("td", {}, u.route.toUpperCase()), h("td", {}, u.returned ? "YES" : "NO"), h("td", {}, u.fees ? u.fees + " · " + money(u.fee_total) : "—"), h("td", {}, w ? badge(w.outcome || w.status) : h("span", { class: "mute" }, "not run")),
-      h("td", {}, h("button", { class: "ghost", onclick: async (e) => { e.target.disabled = true; try { await api("/workflows", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ org_id: u.org_id, unit_id: u.unit_id }) }); toast(u.unit_id + " processed"); route(); } catch (x) { toast(x.message); } } }, w ? "Re-open" : "Run"))); }));
-  q.oninput = draw; draw(); m.append(h("div", { class: "card" }, q, h("div", { class: "scroll", style: "max-height:560px;margin-top:10px" }, h("table", {}, h("thead", {}, h("tr", {}, ["Unit", "Org", "Product", "Route", "Returned", "Fee lines", "Outcome", ""].map((x) => h("th", {}, x)))), body))));
+  const [units, wf] = await Promise.all([api("/api/units"), api("/api/workflow-list")]);
+  const by = Object.fromEntries(wf.map((w) => [w.unit_id + w.org_id, w]));
+
+  const header = h("div", { class: "page-header-strip" },
+    h("div", { class: "page-header-title-box" },
+      h("h2", {}, "Units Inventory"),
+      h("p", { class: "sub" }, "Every inventory unit in the pod, with its fulfillment route and latest workflow state.")
+    ),
+    h("div", { class: "header-action-group" },
+      h("button", { class: "btn-accent", onclick: () => runModal(async () => { route(); }) }, "+ Launch Workflow"),
+      h("button", { class: "ghost", onclick: () => route() }, "↻ Refresh")
+    )
+  );
+
+  const q = inp("", "text", "Filter units by ID, SKU, product title, org...");
+  q.style.maxWidth = "360px";
+  const body = h("tbody");
+
+  const draw = () => body.replaceChildren(...units.filter((u) => (u.unit_id + u.sku + u.org_id + u.title).toLowerCase().includes(q.value.toLowerCase())).map((u) => {
+    const w = by[u.unit_id + u.org_id];
+    return h("tr", {},
+      h("td", { class: "mono", style: "font-weight:600;color:var(--cyan);" }, u.unit_id),
+      h("td", {}, u.org_id.replace("org_demo_", "")),
+      h("td", {},
+        h("div", { style: "font-weight:600;color:var(--ink);" }, u.title),
+        h("div", { class: "mute mono", style: "font-size:11px;" }, u.sku)
+      ),
+      h("td", {}, h("span", { class: "badge route-" + u.route.toLowerCase() }, u.route.toUpperCase())),
+      h("td", {}, u.returned ? h("span", { class: "badge", style: "background:#e0f2fe;color:#0369a1;" }, "YES") : h("span", { class: "mute" }, "NO")),
+      h("td", {}, u.fees ? u.fees + " · " + money(u.fee_total) : h("span", { class: "mute" }, "—")),
+      h("td", {}, w ? badge(w.outcome || w.status) : h("span", { class: "mute" }, "not run")),
+      h("td", { style: "text-align:right;" },
+        h("button", {
+          class: "btn ghost btn-sm",
+          onclick: async (e) => {
+            e.target.disabled = true;
+            try {
+              await api("/workflows", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ org_id: u.org_id, unit_id: u.unit_id })
+              });
+              toast(u.unit_id + " processed");
+              route();
+            } catch (x) {
+              toast(x.message);
+              e.target.disabled = false;
+            }
+          }
+        }, w ? "Re-open" : "Run")
+      )
+    );
+  }));
+
+  q.oninput = draw;
+  draw();
+
+  const card = h("div", { class: "card", style: "margin-bottom:0;" },
+    h("div", { style: "display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;" },
+      q,
+      h("div", { class: "mute", style: "font-size:12px;" }, units.length + " total inventory units")
+    ),
+    h("div", { class: "scroll", style: "max-height:600px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;" },
+      h("table", {},
+        h("thead", {},
+          h("tr", {}, ["Unit", "Org", "Product", "Route", "Returned", "Fee lines", "Outcome", ""].map((x) => h("th", {}, x)))
+        ),
+        body
+      )
+    )
+  );
+
+  m.append(header, card);
 }
 // ---------------------------------------------------------------- review queue
 async function queue(m) {

@@ -27,11 +27,36 @@ async function api(path, opts) {
   if (!r.ok) throw new Error((j && (j.detail?.toString?.() || j.error)) || r.statusText);
   return j;
 }
-const SKY = ["#0ea5e9", "#38bdf8", "#7dd3fc", "#0284c7", "#bae6fd", "#075985", "#0369a1", "#e0f2fe"];
+const SAAS_PALETTE = [
+  "#2563eb", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899", "#64748b", "#0284c7"
+];
+const SKY = SAAS_PALETTE;
 const VC = { PASS: "#10b981", FAIL: "#ef4444", UNCERTAIN: "#f59e0b" };
 const charts = [];
 function chart(parent, cfg, tall) {
-  const box = h("div", { class: "chart" + (tall ? " tall" : "") }), cv = h("canvas"); box.append(cv); parent.append(box);
+  const box = h("div", { class: "chart" + (tall ? " tall" : "") }), cv = h("canvas");
+  box.append(cv);
+  parent.append(box);
+
+  const isDark = document.body.classList.contains("dark");
+  const gridColor = isDark ? "rgba(255, 255, 255, 0.06)" : "#f1f5f9";
+  const tickColor = isDark ? "#94a3b8" : "#64748b";
+
+  let defaultScales = {};
+  if (cfg.type === "bar" || cfg.type === "line") {
+    const isHorizontal = cfg.options && cfg.options.indexAxis === "y";
+    defaultScales = {
+      x: {
+        grid: { display: isHorizontal, color: gridColor, drawBorder: false },
+        ticks: { font: { family: "'Plus Jakarta Sans', -apple-system, sans-serif", size: 11, weight: 500 }, color: tickColor }
+      },
+      y: {
+        grid: { display: !isHorizontal, color: gridColor, drawBorder: false },
+        ticks: { font: { family: "'Plus Jakarta Sans', -apple-system, sans-serif", size: 11, weight: 500 }, color: tickColor, padding: 6 }
+      }
+    };
+  }
+
   cfg.options = Object.assign({
     responsive: true,
     maintainAspectRatio: false,
@@ -41,40 +66,51 @@ function chart(parent, cfg, tall) {
         labels: {
           usePointStyle: true,
           pointStyle: "circle",
-          boxWidth: 6,
-          padding: 12,
-          font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 },
-          color: "#475569"
+          boxWidth: 7,
+          padding: 14,
+          font: { family: "'Plus Jakarta Sans', -apple-system, sans-serif", size: 11, weight: 600 },
+          color: tickColor
         }
       },
       tooltip: {
         backgroundColor: "#0f172a",
+        titleColor: "#ffffff",
+        bodyColor: "#f8fafc",
         padding: 10,
         cornerRadius: 6,
-        bodyFont: { family: "'Plus Jakarta Sans', sans-serif", size: 12 },
-        titleFont: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: 700 }
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.1)",
+        bodyFont: { family: "'Plus Jakarta Sans', -apple-system, sans-serif", size: 12 },
+        titleFont: { family: "'Plus Jakarta Sans', -apple-system, sans-serif", size: 12, weight: 700 }
       }
     }
   }, cfg.options || {});
 
+  if (cfg.type === "bar" || cfg.type === "line") {
+    cfg.options.scales = Object.assign({}, defaultScales, cfg.options.scales || {});
+  }
+
   if (cfg.type === "doughnut" || cfg.type === "pie") {
-    cfg.options.cutout = cfg.options.cutout || "72%";
+    cfg.options.cutout = cfg.options.cutout || "68%";
     (cfg.data.datasets || []).forEach(ds => {
-      ds.borderRadius = ds.borderRadius || 4;
+      ds.borderRadius = ds.borderRadius || 6;
       ds.borderWidth = ds.borderWidth || 2;
       ds.borderColor = ds.borderColor || "#ffffff";
+      ds.hoverOffset = 4;
     });
   }
-  charts.push(new Chart(cv, cfg)); return box;
+  charts.push(new Chart(cv, cfg));
+  return box;
 }
 const empty = (p, m = "No data yet — run an agent first.") => p.append(h("p", { class: "mute" }, m));
 function doughnut(p, obj, colors, type = "doughnut") {
-  const k = Object.keys(obj); if (!k.length) return empty(p);
-  chart(p, { type, data: { labels: k, datasets: [{ data: k.map((x) => obj[x]), backgroundColor: k.map((x, i) => (colors && colors[x]) || SKY[i % SKY.length]) }] } });
+  const k = Object.keys(obj);
+  if (!k.length) return empty(p);
+  chart(p, { type, data: { labels: k, datasets: [{ data: k.map((x) => obj[x]), backgroundColor: k.map((x, i) => (colors && colors[x]) || SAAS_PALETTE[i % SAAS_PALETTE.length]) }] } });
 }
 function bar(p, labels, sets, opts = {}) {
   if (!labels.length) return empty(p);
-  chart(p, { type: "bar", data: { labels, datasets: sets.map((s, i) => ({ backgroundColor: SKY[i % SKY.length], borderRadius: 6, ...s })) }, options: opts }, opts.tall);
+  chart(p, { type: "bar", data: { labels, datasets: sets.map((s, i) => ({ backgroundColor: SAAS_PALETTE[i % SAAS_PALETTE.length], borderRadius: 6, borderSkipped: false, maxBarThickness: 36, ...s })) }, options: opts }, opts.tall);
 }
 // ---------------------------------------------------------------- photo drop zone
 function dropzone(withRoles) {
