@@ -760,11 +760,70 @@ async function workflows(m) {
   m.append(h("div", { class: "row card" }, search, h("div", { class: "fix" }, h("button", { onclick: () => runModal(async () => { rows = await api("/api/workflow-list"); draw(); }) }, "+ Run Workflow"))), host); draw();
 }
 async function runModal(done) {
-  const units = await api("/api/units"); const sel = h("select", {}, units.map((u) => h("option", { value: u.org_id + "|" + u.unit_id }, `${u.unit_id} · ${u.org_id} (Route: ${u.route.toUpperCase()}, Returned: ${u.returned ? "YES" : "NO"}) · ${u.title}`)));
-  const msg = h("p", { class: "mute" }); const ov = h("div", { class: "overlay" }); const close = () => ov.remove();
-  const go = h("button", { onclick: async () => { go.disabled = true; msg.textContent = "Running…"; const [org, unit] = sel.value.split("|"); try { const r = await api("/workflows", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ org_id: org, unit_id: unit }) }); toast("Workflow " + r.status + " · " + (r.final_outcome?.outcome || "")); close(); done && done(); } catch (e) { msg.textContent = e.message; go.disabled = false; } } }, "▶ Launch Workflow");
-  ov.append(h("div", { class: "modal" }, h("div", { class: "row" }, h("h3", {}, "Run Workflow"), h("button", { class: "ghost fix", onclick: close }, "✕")), h("p", { class: "mute" }, "Dispatch commerce orchestration for an inventory unit."),
-    h("div", { class: "tabs" }, h("button", { class: "chip on" }, "Demo Cases (" + units.length + ")"), h("a", { class: "chip", href: "#live", onclick: close }, "Custom Unit →")), field("Select case", sel), msg, h("div", { class: "row", style: "justify-content:flex-end" }, h("button", { class: "ghost fix", onclick: close }, "Cancel"), h("div", { class: "fix" }, go))));
+  const units = await api("/api/units");
+  const sel = h("select", { style: "font-weight:500;" },
+    units.map((u) => h("option", { value: u.org_id + "|" + u.unit_id },
+      `${u.unit_id} · ${u.org_id.replace("org_demo_", "")} (${u.route.toUpperCase()}${u.returned ? " · RETURNED" : ""}) · ${u.title}`
+    ))
+  );
+
+  const msg = h("div", { class: "modal-alert", style: "display:none;" });
+  const ov = h("div", { class: "overlay" });
+  const close = () => ov.remove();
+
+  ov.onclick = (e) => {
+    if (e.target === ov) close();
+  };
+
+  const go = h("button", {
+    class: "btn btn-accent",
+    style: "min-width:150px;",
+    onclick: async () => {
+      go.disabled = true;
+      go.innerHTML = '<span class="spin"></span> Dispatching Pipeline…';
+      msg.style.display = "none";
+      const [org, unit] = sel.value.split("|");
+      try {
+        const r = await api("/workflows", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ org_id: org, unit_id: unit })
+        });
+        toast("Workflow launched · " + (r.final_outcome?.outcome || r.status));
+        close();
+        done && done();
+      } catch (e) {
+        msg.textContent = e.message;
+        msg.style.display = "block";
+        go.disabled = false;
+        go.textContent = "▶ Launch Workflow";
+      }
+    }
+  }, "▶ Launch Workflow");
+
+  const modal = h("div", { class: "modal" },
+    h("div", { class: "modal-header" },
+      h("div", { class: "modal-header-text" },
+        h("h3", { class: "modal-title" }, "Run Commerce Workflow"),
+        h("p", { class: "modal-subtitle" }, "Dispatch multi-agent orchestration for an inventory unit.")
+      ),
+      h("button", { class: "modal-close-btn", type: "button", onclick: close, title: "Close" }, "✕")
+    ),
+    h("div", { class: "modal-tabs" },
+      h("button", { type: "button", class: "modal-tab active" }, "Benchmark Units (" + units.length + ")"),
+      h("a", { class: "modal-tab", href: "#live", onclick: close }, "Interactive Custom Pipeline →")
+    ),
+    h("div", { class: "modal-body" },
+      field("Select Inventory Unit & Fulfillment Route", sel),
+      msg
+    ),
+    h("div", { class: "modal-footer" },
+      h("button", { class: "btn ghost", type: "button", onclick: close }, "Cancel"),
+      go
+    )
+  );
+
+  ov.append(modal);
   document.body.append(ov);
 }
 // ---------------------------------------------------------------- units
@@ -1208,17 +1267,54 @@ async function route() {
 }
 function promptBackendUrl() {
   const current = getApiBase() || "";
-  const next = prompt("Enter your Render Backend API URL (e.g. https://cube-round3-pod-backend.onrender.com or leave blank for local/same-origin):", current);
-  if (next !== null) {
-    if (next.trim()) {
-      localStorage.setItem("CUBE_API_BASE", next.trim().replace(/\/+$/, ""));
-    } else {
-      localStorage.removeItem("CUBE_API_BASE");
+  const ov = h("div", { class: "overlay" });
+  const close = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) close(); };
+
+  const input = h("input", {
+    type: "text",
+    value: current,
+    placeholder: "https://cube-round3-pod-backend.onrender.com",
+    style: "font-family:var(--font-mono);font-size:13px;"
+  });
+
+  const save = h("button", {
+    class: "btn btn-accent",
+    style: "min-width:130px;",
+    onclick: () => {
+      const val = input.value.trim().replace(/\/+$/, "");
+      if (val) {
+        localStorage.setItem("CUBE_API_BASE", val);
+      } else {
+        localStorage.removeItem("CUBE_API_BASE");
+      }
+      toast("Backend updated · " + (val || "local / same-origin"));
+      close();
+      refreshStatus();
+      route();
     }
-    toast("Backend updated: " + (next.trim() || "same-origin / local"));
-    refreshStatus();
-    route();
-  }
+  }, "Save Endpoint");
+
+  const modal = h("div", { class: "modal", style: "max-width:480px;" },
+    h("div", { class: "modal-header" },
+      h("div", { class: "modal-header-text" },
+        h("h3", { class: "modal-title" }, "Set Remote Backend API"),
+        h("p", { class: "modal-subtitle" }, "Direct web requests to your deployed remote service or leave empty for same-origin.")
+      ),
+      h("button", { class: "modal-close-btn", type: "button", onclick: close, title: "Close" }, "✕")
+    ),
+    h("div", { class: "modal-body" },
+      field("Orchestrator Backend Base URL", input),
+      h("p", { class: "mute", style: "font-size:11.5px;margin:0;" }, "Leave empty to connect to the local FastAPI dev server.")
+    ),
+    h("div", { class: "modal-footer" },
+      h("button", { class: "btn ghost", type: "button", onclick: close }, "Cancel"),
+      save
+    )
+  );
+
+  ov.append(modal);
+  document.body.append(ov);
 }
 async function refreshStatus() {
   const b = $("#groqbox");

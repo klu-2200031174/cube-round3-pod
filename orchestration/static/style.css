@@ -1075,25 +1075,7 @@ button.ghost:hover, .btn.ghost:hover {
   border-color: var(--ink);
 }
 
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-}
 
-.modal {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  width: min(580px, 92vw);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border);
-}
 
 .footbar {
   margin-top: 36px;
@@ -1437,4 +1419,327 @@ input[type="checkbox"], input[type="radio"] {
 .drop.over {
   border-color: #0284c7;
   background: #e0f2fe;
+}
+
+
+/* ==========================================================================
+   ENTERPRISE MODAL & OVERLAY SYSTEM (SaaS / Linear / Vercel style)
+   ========================================================================== */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.row.space-between {
+  justify-content: space-between;
+}
+.fix {
+  flex: none;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: overlayFadeIn 0.15s ease-out;
+  padding: 20px;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: var(--radius-lg, 12px);
+  padding: 24px 28px;
+  width: min(560px, 96vw);
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  display: flex;
+  flex-direction: column;
+  animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.modal-header-text {
+  flex: 1;
+}
+
+.modal-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+}
+
+.modal-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mute);
+  line-height: 1.45;
+}
+
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--mute);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  box-shadow: none;
+}
+
+.modal-close-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--ink);
+  border-color: var(--border-strong);
+  transform: none;
+}
+
+.modal-tabs {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: var(--radius-md, 8px);
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.modal-tab {
+  flex: 1;
+  text-align: center;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 6px);
+  border: none;
+  background: transparent;
+  color: var(--mute);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  box-shadow: none;
+  height: auto;
+}
+
+.modal-tab.active {
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.modal-tab:hover:not(.active) {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.modal-alert {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--fail-bg);
+  border: 1px solid var(--fail-border);
+  color: var(--fail);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
+   COLLAPSED SIDEBAR FIX (No text wrapping, clean icon column)
+   ========================================================================== */
+aside.collapsed {
+  width: 68px !important;
+  overflow-x: hidden;
+}
+
+aside.collapsed .sidebar-header {
+  padding: 14px 0;
+  justify-content: center;
+}
+
+aside.collapsed .sidebar-top-actions {
+  padding: 6px 0;
+  align-items: center;
+}
+
+aside.collapsed .sidebar-top-link {
+  width: 40px;
+  height: 38px;
+  padding: 0;
+  justify-content: center;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+}
+
+aside.collapsed .sidebar-top-link span,
+aside.collapsed .sidebar-top-link .top-link-arrow {
+  display: none !important;
+}
+
+aside.collapsed .nav-item {
+  width: 44px;
+  height: 38px;
+  padding: 0;
+  margin: 2px auto;
+  justify-content: center;
+}
+
+aside.collapsed .nav-item span {
+  display: none !important;
+}
+
+aside.collapsed .nav-section-title {
+  display: none !important;
+}
+
+
+/* ==========================================================================
+   MISSING LAYOUT & DATA COMPONENTS (.grid, .kpi, .steps, .stp, .chips)
+   ========================================================================== */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+.grid.g2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.grid.g3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.grid.g4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 900px) {
+  .grid.g2, .grid.g3, .grid.g4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.kpi:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow);
+}
+.kpi span {
+  font-size: 11px;
+  color: var(--mute);
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.kpi b {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+/* Workflow Stage Timeline Cards */
+.steps {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 8px 0;
+  margin-top: 10px;
+}
+.stp {
+  flex: 1;
+  min-width: 120px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.stp b {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+.stp span {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--mute);
+}
+.stp.completed, .stp.PASS {
+  border-color: var(--pass-border);
+  background: var(--pass-bg);
+}
+.stp.completed span, .stp.PASS span {
+  color: var(--pass);
+}
+.stp.failed, .stp.FAIL {
+  border-color: var(--fail-border);
+  background: var(--fail-bg);
+}
+.stp.failed span, .stp.FAIL span {
+  color: var(--fail);
+}
+.stp.uncertain, .stp.UNCERTAIN {
+  border-color: var(--unc-border);
+  background: var(--unc-bg);
+}
+.stp.uncertain span, .stp.UNCERTAIN span {
+  color: var(--unc);
 }
